@@ -17,23 +17,35 @@ main{max-width:760px;margin:auto;padding:calc(28px + env(safe-area-inset-top)) 2
 textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l);background:var(--c);color:white;padding:13px;font:inherit;font-size:16px}.notes{margin-top:22px}.notes label{display:block;font-size:18px;font-weight:600;margin-bottom:9px}
 .save{width:100%;margin-top:18px;padding:17px;border:0;border-radius:16px;font-size:18px;font-weight:700}
 </style></head><body><main>
-<section id="home"><h1>🏋️ Salitreeni</h1><h2>Tämän viikon treenit</h2><div class="progress"><div id="bar"></div></div><div class="grid">
-<button class="workout" data-n="1"><span class="done" id="d1"></span><strong>Treeni 1</strong><span class="sub">Alakroppa – raskas</span></button>
-<button class="workout" data-n="2"><span class="done" id="d2"></span><strong>Treeni 2</strong><span class="sub">Yläkroppa – kevyt</span></button>
-<button class="workout" data-n="3"><span class="done" id="d3"></span><strong>Treeni 3</strong><span class="sub">Alakroppa – kevyt</span></button>
-<button class="workout" data-n="4"><span class="done" id="d4"></span><strong>Treeni 4</strong><span class="sub">Yläkroppa – raskas</span></button>
+<section id="profiles"><h1>🏋️ Salitreeni</h1><h2>Kuka treenaa?</h2>
+<div class="grid">
+<button class="workout profile" data-profile="jarkko"><strong>Jarkko</strong><span class="sub">4 treeniä</span></button>
+<button class="workout profile" data-profile="ina"><strong>Ina</strong><span class="sub">3 treeniä</span></button>
+</div></section>
+<section id="home" style="display:none"><button class="back" id="profileBack">‹ Aloitus</button><h1 id="profileTitle">🏋️ Salitreeni</h1><h2>Tämän viikon treenit</h2><div class="progress"><div id="bar"></div></div><div class="grid">
+<button class="workout jw" data-n="1"><span class="done" id="d1"></span><strong>Treeni 1</strong><span class="sub">Alakroppa – raskas</span></button>
+<button class="workout jw" data-n="2"><span class="done" id="d2"></span><strong>Treeni 2</strong><span class="sub">Yläkroppa – kevyt</span></button>
+<button class="workout jw" data-n="3"><span class="done" id="d3"></span><strong>Treeni 3</strong><span class="sub">Alakroppa – kevyt</span></button>
+<button class="workout jw" data-n="4"><span class="done" id="d4"></span><strong>Treeni 4</strong><span class="sub">Yläkroppa – raskas</span></button>
+<button class="workout iw" style="display:none" data-n="1"><span class="done" id="i1"></span><strong>Treeni 1</strong><span class="sub">Jalat</span></button>
+<button class="workout iw" style="display:none" data-n="2"><span class="done" id="i2"></span><strong>Treeni 2</strong><span class="sub">Yläkroppa</span></button>
+<button class="workout iw" style="display:none" data-n="3"><span class="done" id="i3"></span><strong>Treeni 3</strong><span class="sub">Jalat + yläkroppa</span></button>
 </div><p class="small" style="text-align:center">Tulokset tallennetaan tällä versiolla vielä laitteelle.</p></section>
 <section id="detail"><button class="back" id="back">‹ Viikon treenit</button><h1 id="title"></h1><div id="exercises"></div>
 <button class="addExercise" id="addExercise">＋ Lisää liike</button>
 <div class="notes"><label>Treenin muistiinpanot</label><textarea id="notes" placeholder="Esim. kulki hyvin, nosta ensi kerralla 2,5 kg..."></textarea></div>
 <button class="save" id="saveBtn">Tallenna treeni</button></section></main>
 <script>
-const base={1:["Kyykky","Romanialainen maastaveto","Jalkaprässi","Loitontajat","Lähentäjät"],2:["Leuanveto","Penkkipunnerrus","Ylätalja","Pullover taljassa"],3:["Jalkaprässi / kevyt","Reiden koukistus","Reiden ojennus","Pohkeet"],4:["Vinopenkki","Pystypunnerrus tangolla","Soutu","Ylätalja"]};
-const K="salitreeni-pwa-v2",OLD="salitreeni-pwa-v1";let cur=0;
+const programs={
+jarkko:{1:["Kyykky","Romanialainen maastaveto","Jalkaprässi","Loitontajat","Lähentäjät"],2:["Leuanveto","Penkkipunnerrus","Ylätalja","Pullover taljassa"],3:["Jalkaprässi / kevyt","Reiden koukistus","Reiden ojennus","Pohkeet"],4:["Vinopenkki","Pystypunnerrus tangolla","Soutu","Ylätalja"]},
+ina:{1:["Kyykky","Jalkaprässi","Reiden koukistus","Reiden ojennus","Pohkeet"],2:["Ylätalja","Soutu","Rintapunnerrus","Pystypunnerrus","Hauiskääntö","Ojentajapunnerrus"],3:["Jalkaprässi","Romanialainen maastaveto","Ylätalja","Rintapunnerrus","Soutu"]}
+};
+let profile="jarkko";let cur=0;
+function storageKey(){return profile==="jarkko"?"salitreeni-pwa-v2":"salitreeni-ina-v1"}
 function empty(){return{history:[],custom:{1:[],2:[],3:[],4:[]},order:{1:[],2:[],3:[],4:[]}}}
-function load(){try{let x=localStorage.getItem(K);if(x)return JSON.parse(x);let o=localStorage.getItem(OLD);if(o){let d=empty();d.history=JSON.parse(o).history||[];store(d);return d}}catch(e){}return empty()}
-function store(d){localStorage.setItem(K,JSON.stringify(d))}
-function names(n){let d=load(),all=base[n].concat((d.custom&&d.custom[n])||[]),ord=(d.order&&d.order[n])||[];let out=ord.filter(x=>all.includes(x));all.forEach(x=>{if(!out.includes(x))out.push(x)});return out}
+function load(){try{let x=localStorage.getItem(storageKey());if(x)return JSON.parse(x);if(profile==="jarkko"){let o=localStorage.getItem("salitreeni-pwa-v1");if(o){let d=empty();d.history=JSON.parse(o).history||[];store(d);return d}}}catch(e){}return empty()}
+function store(d){localStorage.setItem(storageKey(),JSON.stringify(d))}
+function names(n){let d=load(),all=programs[profile][n].concat((d.custom&&d.custom[n])||[]),ord=(d.order&&d.order[n])||[];let out=ord.filter(x=>all.includes(x));all.forEach(x=>{if(!out.includes(x))out.push(x)});return out}
 function saveOrder(){let d=load();if(!d.order)d.order={1:[],2:[],3:[],4:[]};d.order[cur]=[...document.querySelectorAll(".exercise")].map(e=>e.dataset.name);store(d)}
 function moveCard(el,dir){let t=dir<0?el.previousElementSibling:el.nextElementSibling;if(!t)return;if(dir<0)exercises.insertBefore(el,t);else exercises.insertBefore(t,el);saveOrder()}
 function custom(n,x){return (load().custom[n]||[]).includes(x)}
@@ -44,14 +56,16 @@ function lastTxt(a){if(!a)return"Ei aiempaa tulosta";let p=a.filter(x=>x.kg||x.r
 function row(i,del){return `<div class="row"><div class="set">${i}</div><input class="kg" inputmode="decimal" placeholder="kg"><input class="reps" inputmode="numeric" placeholder="toistot">${del?'<button class="remove removeSet">×</button>':'<span></span>'}</div>`}
 function bind(d){d.querySelector(".moveUp").onclick=()=>moveCard(d,-1);d.querySelector(".moveDown").onclick=()=>moveCard(d,1);d.querySelector(".addSet").onclick=()=>{let r=d.querySelector(".rows"),n=r.children.length;r.insertAdjacentHTML("beforeend",row(n+1,true));bind(d)};
 d.querySelectorAll(".removeSet").forEach(b=>b.onclick=()=>{b.closest(".row").remove();d.querySelectorAll(".set").forEach((s,i)=>s.textContent=i+1)});
-let b=d.querySelector(".removeEx");if(b)b.onclick=()=>{if(confirm("Poistetaanko "+d.dataset.name+"?")){let x=load();x.custom[cur]=x.custom[cur].filter(v=>v!==d.dataset.name);store(x);d.remove();saveOrder()}}}
+let b=d.querySelector(".removeEx");if(b)b.onclick=()=>{if(confirm("Oletko ihan varma, että haluat poistaa liikkeen ”"+d.dataset.name+"” tästä treenistä?")){let x=load();x.custom[cur]=x.custom[cur].filter(v=>v!==d.dataset.name);store(x);d.remove();saveOrder()}}}
 function card(name){let d=document.createElement("div");d.className="exercise";d.dataset.name=name;let rx=custom(cur,name)?'<button class="remove removeEx">×</button>':"";
 let pn=lastNote(cur,name);d.innerHTML=`<div class="exhead"><div><h3>${name}</h3><div class="last">Viimeksi: ${lastTxt(last(cur,name))}</div>${pn?`<div class="prevnote">💬 Viimeksi: ${pn}</div>`:""}</div><div class="exactions"><button class="move moveUp">↑</button><button class="move moveDown">↓</button>${rx}</div></div><div class="head"><div></div><div>KG</div><div>TOISTOT</div><div></div></div><div class="rows">${row(1,false)+row(2,false)+row(3,false)}</div><button class="addSet">＋ Lisää sarja</button><div class="exnote"><textarea class="exerciseNote" placeholder="Kommentti tästä liikkeestä..."></textarea></div>`;bind(d);return d}
 function openW(n){cur=n;home.style.display="none";detail.style.display="block";title.textContent="Treeni "+n;notes.value="";exercises.innerHTML="";names(n).forEach(x=>exercises.appendChild(card(x)));scrollTo(0,0)}
 function goHome(){detail.style.display="none";home.style.display="block";update();scrollTo(0,0)}
 function saveW(){let d=load(),ex={},exerciseNotes={};document.querySelectorAll(".exercise").forEach(e=>{ex[e.dataset.name]=[...e.querySelectorAll(".row")].map(r=>({kg:r.querySelector(".kg").value,reps:r.querySelector(".reps").value}));exerciseNotes[e.dataset.name]=e.querySelector(".exerciseNote").value.trim()});d.history.push({workout:cur,date:new Date().toISOString(),exercises:ex,exerciseNotes:exerciseNotes,notes:notes.value});store(d);goHome()}
-function update(){let h=load().history||[],now=new Date(),day=(now.getDay()+6)%7,start=new Date(now);start.setHours(0,0,0,0);start.setDate(start.getDate()-day);let done={};h.forEach(x=>{if(new Date(x.date)>=start)done[x.workout]=x.date});let c=0;for(let n=1;n<=4;n++){let e=document.getElementById("d"+n);if(done[n]){e.textContent="✓ "+new Date(done[n]).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric"});c++}else e.textContent=""}bar.style.width=c*25+"%"}
-document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>openW(+b.dataset.n));back.onclick=goHome;saveBtn.onclick=saveW;
-addExercise.onclick=()=>{let name=prompt("Liikkeen nimi");if(!name||!name.trim())return;name=name.trim();if(names(cur).some(x=>x.toLowerCase()===name.toLowerCase()))return alert("Liike on jo tässä treenissä.");let d=load();d.custom[cur].push(name);store(d);exercises.appendChild(card(name));saveOrder()};update();
+function update(){let h=load().history||[],now=new Date(),day=(now.getDay()+6)%7,start=new Date(now);start.setHours(0,0,0,0);start.setDate(start.getDate()-day);let done={};h.forEach(x=>{if(new Date(x.date)>=start)done[x.workout]=x.date});let max=profile==="jarkko"?4:3,c=0;for(let n=1;n<=max;n++){let e=document.getElementById((profile==="jarkko"?"d":"i")+n);if(done[n]){e.textContent="✓ "+new Date(done[n]).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric"});c++}else e.textContent=""}bar.style.width=(c/max*100)+"%"}
+function chooseProfile(p){profile=p;profiles.style.display="none";home.style.display="block";profileTitle.textContent="🏋️ "+(p==="jarkko"?"Jarkko":"Ina");document.querySelectorAll(".jw").forEach(x=>x.style.display=p==="jarkko"?"block":"none");document.querySelectorAll(".iw").forEach(x=>x.style.display=p==="ina"?"block":"none");update()}
+function toProfiles(){home.style.display="none";detail.style.display="none";profiles.style.display="block";scrollTo(0,0)}
+document.querySelectorAll("[data-profile]").forEach(b=>b.onclick=()=>chooseProfile(b.dataset.profile));profileBack.onclick=toProfiles;document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>openW(+b.dataset.n));back.onclick=goHome;saveBtn.onclick=saveW;
+addExercise.onclick=()=>{let name=prompt("Liikkeen nimi");if(!name||!name.trim())return;name=name.trim();if(names(cur).some(x=>x.toLowerCase()===name.toLowerCase()))return alert("Liike on jo tässä treenissä.");let d=load();d.custom[cur].push(name);store(d);exercises.appendChild(card(name));saveOrder()};
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
 </script></body></html>

@@ -1,9 +1,10 @@
-Salitreeni PWA v2.2
+Salitreeni PWA v3.1
 
-Uutta:
-- ↑ / ↓ jokaisen liikkeen kohdalla
-- järjestys tallentuu erikseen Treeni 1–4 -päiville
-- järjestys säilyy seuraavalla kerralla
-- aiemmat kommentti-, sarja- ja lisäliikeominaisuudet säilyvät
+Muutos:
+- Itse lisätyn liikkeen poistossa näkyy roskakori.
+- Roskakoria painettaessa kysytään:
+  "Oletko ihan varma, että haluat poistaa liikkeen [nimi] tästä treenistä?"
+- Poisto tapahtuu vasta vahvistuksen jälkeen.
 
+Muut v3:n ominaisuudet säilyvät.
 Korvaa GitHubissa index.html, manifest.webmanifest ja sw.js.
