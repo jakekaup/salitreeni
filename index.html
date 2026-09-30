@@ -10,7 +10,7 @@ main{max-width:760px;margin:auto;padding:calc(28px + env(safe-area-inset-top)) 2
 .grid{display:grid;gap:14px}.workout,.addExercise{width:100%;text-align:left;border:1px solid var(--l);background:var(--c);color:var(--t);padding:20px;border-radius:22px;font:inherit}
 .workout strong{display:block;font-size:21px;margin-bottom:6px}.sub,.last,.small{color:var(--m)}.done{float:right;font-size:14px}
 #detail{display:none}.back,.addSet,.remove{border:0;background:none;color:var(--t)}.back{font-size:17px;padding:0;margin-bottom:25px}
-.exercise{background:var(--c);border:1px solid var(--l);border-radius:18px;padding:16px;margin:12px 0}.exhead{display:flex;justify-content:space-between}.exercise h3{margin:0 0 5px}.last{font-size:13px;margin-bottom:12px}
+.exercise{background:var(--c);border:1px solid var(--l);border-radius:18px;padding:16px;margin:12px 0}.exhead{display:flex;justify-content:space-between;gap:8px}.exactions{display:flex;gap:2px;align-items:flex-start}.move{border:0;background:none;color:var(--m);font-size:19px;padding:3px 5px}.exercise h3{margin:0 0 5px}.last{font-size:13px;margin-bottom:12px}
 .head,.row{display:grid;grid-template-columns:35px 1fr 1fr 30px;gap:7px;align-items:center}.head{font-size:12px;color:var(--m);text-align:center}.row{margin:7px 0}.set{text-align:center;color:var(--m)}
 .row input{min-width:0;width:100%;font-size:18px;padding:12px 5px;border-radius:11px;border:1px solid var(--l);background:#101318;color:white;text-align:center}.remove{font-size:20px;color:var(--m)}
 .addSet{padding:10px 0;font-size:15px}.exnote{margin-top:10px}.exnote textarea{min-height:64px;font-size:14px}.prevnote{font-size:13px;color:var(--m);margin:3px 0 8px;font-style:italic}.addExercise{text-align:center;padding:15px;margin-top:10px}
@@ -30,26 +30,28 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <script>
 const base={1:["Kyykky","Romanialainen maastaveto","Jalkaprässi","Loitontajat","Lähentäjät"],2:["Leuanveto","Penkkipunnerrus","Ylätalja","Pullover taljassa"],3:["Jalkaprässi / kevyt","Reiden koukistus","Reiden ojennus","Pohkeet"],4:["Vinopenkki","Pystypunnerrus tangolla","Soutu","Ylätalja"]};
 const K="salitreeni-pwa-v2",OLD="salitreeni-pwa-v1";let cur=0;
-function empty(){return{history:[],custom:{1:[],2:[],3:[],4:[]}}}
+function empty(){return{history:[],custom:{1:[],2:[],3:[],4:[]},order:{1:[],2:[],3:[],4:[]}}}
 function load(){try{let x=localStorage.getItem(K);if(x)return JSON.parse(x);let o=localStorage.getItem(OLD);if(o){let d=empty();d.history=JSON.parse(o).history||[];store(d);return d}}catch(e){}return empty()}
 function store(d){localStorage.setItem(K,JSON.stringify(d))}
-function names(n){let d=load();return base[n].concat((d.custom&&d.custom[n])||[])}
+function names(n){let d=load(),all=base[n].concat((d.custom&&d.custom[n])||[]),ord=(d.order&&d.order[n])||[];let out=ord.filter(x=>all.includes(x));all.forEach(x=>{if(!out.includes(x))out.push(x)});return out}
+function saveOrder(){let d=load();if(!d.order)d.order={1:[],2:[],3:[],4:[]};d.order[cur]=[...document.querySelectorAll(".exercise")].map(e=>e.dataset.name);store(d)}
+function moveCard(el,dir){let t=dir<0?el.previousElementSibling:el.nextElementSibling;if(!t)return;if(dir<0)exercises.insertBefore(el,t);else exercises.insertBefore(t,el);saveOrder()}
 function custom(n,x){return (load().custom[n]||[]).includes(x)}
 function lastEntry(n,x){let h=load().history||[];for(let i=h.length-1;i>=0;i--)if(h[i].workout===n&&h[i].exercises[x])return h[i]}
 function last(n,x){let e=lastEntry(n,x);return e?e.exercises[x]:null}
 function lastNote(n,x){let e=lastEntry(n,x);return e&&e.exerciseNotes?e.exerciseNotes[x]||"":""}
 function lastTxt(a){if(!a)return"Ei aiempaa tulosta";let p=a.filter(x=>x.kg||x.reps).map(x=>(x.kg||"–")+" kg × "+(x.reps||"–"));return p.length?p.join(" / "):"Ei aiempaa tulosta"}
 function row(i,del){return `<div class="row"><div class="set">${i}</div><input class="kg" inputmode="decimal" placeholder="kg"><input class="reps" inputmode="numeric" placeholder="toistot">${del?'<button class="remove removeSet">×</button>':'<span></span>'}</div>`}
-function bind(d){d.querySelector(".addSet").onclick=()=>{let r=d.querySelector(".rows"),n=r.children.length;r.insertAdjacentHTML("beforeend",row(n+1,true));bind(d)};
+function bind(d){d.querySelector(".moveUp").onclick=()=>moveCard(d,-1);d.querySelector(".moveDown").onclick=()=>moveCard(d,1);d.querySelector(".addSet").onclick=()=>{let r=d.querySelector(".rows"),n=r.children.length;r.insertAdjacentHTML("beforeend",row(n+1,true));bind(d)};
 d.querySelectorAll(".removeSet").forEach(b=>b.onclick=()=>{b.closest(".row").remove();d.querySelectorAll(".set").forEach((s,i)=>s.textContent=i+1)});
-let b=d.querySelector(".removeEx");if(b)b.onclick=()=>{if(confirm("Poistetaanko "+d.dataset.name+"?")){let x=load();x.custom[cur]=x.custom[cur].filter(v=>v!==d.dataset.name);store(x);d.remove()}}}
+let b=d.querySelector(".removeEx");if(b)b.onclick=()=>{if(confirm("Poistetaanko "+d.dataset.name+"?")){let x=load();x.custom[cur]=x.custom[cur].filter(v=>v!==d.dataset.name);store(x);d.remove();saveOrder()}}}
 function card(name){let d=document.createElement("div");d.className="exercise";d.dataset.name=name;let rx=custom(cur,name)?'<button class="remove removeEx">×</button>':"";
-let pn=lastNote(cur,name);d.innerHTML=`<div class="exhead"><div><h3>${name}</h3><div class="last">Viimeksi: ${lastTxt(last(cur,name))}</div>${pn?`<div class="prevnote">💬 Viimeksi: ${pn}</div>`:""}</div>${rx}</div><div class="head"><div></div><div>KG</div><div>TOISTOT</div><div></div></div><div class="rows">${row(1,false)+row(2,false)+row(3,false)}</div><button class="addSet">＋ Lisää sarja</button><div class="exnote"><textarea class="exerciseNote" placeholder="Kommentti tästä liikkeestä..."></textarea></div>`;bind(d);return d}
+let pn=lastNote(cur,name);d.innerHTML=`<div class="exhead"><div><h3>${name}</h3><div class="last">Viimeksi: ${lastTxt(last(cur,name))}</div>${pn?`<div class="prevnote">💬 Viimeksi: ${pn}</div>`:""}</div><div class="exactions"><button class="move moveUp">↑</button><button class="move moveDown">↓</button>${rx}</div></div><div class="head"><div></div><div>KG</div><div>TOISTOT</div><div></div></div><div class="rows">${row(1,false)+row(2,false)+row(3,false)}</div><button class="addSet">＋ Lisää sarja</button><div class="exnote"><textarea class="exerciseNote" placeholder="Kommentti tästä liikkeestä..."></textarea></div>`;bind(d);return d}
 function openW(n){cur=n;home.style.display="none";detail.style.display="block";title.textContent="Treeni "+n;notes.value="";exercises.innerHTML="";names(n).forEach(x=>exercises.appendChild(card(x)));scrollTo(0,0)}
 function goHome(){detail.style.display="none";home.style.display="block";update();scrollTo(0,0)}
 function saveW(){let d=load(),ex={},exerciseNotes={};document.querySelectorAll(".exercise").forEach(e=>{ex[e.dataset.name]=[...e.querySelectorAll(".row")].map(r=>({kg:r.querySelector(".kg").value,reps:r.querySelector(".reps").value}));exerciseNotes[e.dataset.name]=e.querySelector(".exerciseNote").value.trim()});d.history.push({workout:cur,date:new Date().toISOString(),exercises:ex,exerciseNotes:exerciseNotes,notes:notes.value});store(d);goHome()}
 function update(){let h=load().history||[],now=new Date(),day=(now.getDay()+6)%7,start=new Date(now);start.setHours(0,0,0,0);start.setDate(start.getDate()-day);let done={};h.forEach(x=>{if(new Date(x.date)>=start)done[x.workout]=x.date});let c=0;for(let n=1;n<=4;n++){let e=document.getElementById("d"+n);if(done[n]){e.textContent="✓ "+new Date(done[n]).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric"});c++}else e.textContent=""}bar.style.width=c*25+"%"}
 document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>openW(+b.dataset.n));back.onclick=goHome;saveBtn.onclick=saveW;
-addExercise.onclick=()=>{let name=prompt("Liikkeen nimi");if(!name||!name.trim())return;name=name.trim();if(names(cur).some(x=>x.toLowerCase()===name.toLowerCase()))return alert("Liike on jo tässä treenissä.");let d=load();d.custom[cur].push(name);store(d);exercises.appendChild(card(name))};update();
+addExercise.onclick=()=>{let name=prompt("Liikkeen nimi");if(!name||!name.trim())return;name=name.trim();if(names(cur).some(x=>x.toLowerCase()===name.toLowerCase()))return alert("Liike on jo tässä treenissä.");let d=load();d.custom[cur].push(name);store(d);exercises.appendChild(card(name));saveOrder()};update();
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
 </script></body></html>

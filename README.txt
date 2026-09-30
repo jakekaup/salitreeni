@@ -1,3 +1,9 @@
-Salitreeni PWA v2.1
+Salitreeni PWA v2.2
 
-Uutta: liikekohtainen kommentti, edellisen liikekommentin näyttö, yleinen treenimuistiinpano säilyy. Korvaa GitHubissa index.html, manifest.webmanifest ja sw.js.
+Uutta:
+- ↑ / ↓ jokaisen liikkeen kohdalla
+- järjestys tallentuu erikseen Treeni 1–4 -päiville
+- järjestys säilyy seuraavalla kerralla
+- aiemmat kommentti-, sarja- ja lisäliikeominaisuudet säilyvät
+
+Korvaa GitHubissa index.html, manifest.webmanifest ja sw.js.
