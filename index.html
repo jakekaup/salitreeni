@@ -1,98 +1,53 @@
-<!doctype html>
-<html lang="fi">
-<head>
-<meta charset="utf-8">
+<!doctype html><html lang="fi"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0d0f">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Salitreeni">
-<link rel="manifest" href="manifest.webmanifest">
-<title>Salitreeni</title>
+<meta name="theme-color" content="#0b0d0f"><meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest"><title>Salitreeni</title>
 <style>
-:root{color-scheme:dark;--bg:#0b0d0f;--card:#171a1f;--line:#292e37;--text:#f4f5f7;--muted:#9fa6b2}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-main{max-width:760px;margin:auto;padding:calc(28px + env(safe-area-inset-top)) 20px calc(100px + env(safe-area-inset-bottom))}
-h1{font-size:34px;margin:8px 0 44px}h2{font-size:27px;font-weight:500;margin:0 0 18px}
-.progress{height:20px;background:var(--card);border:1px solid var(--line);border-radius:20px;margin-bottom:26px;overflow:hidden}.progress div{height:100%;background:#596273;transition:.2s}
-.grid{display:grid;gap:14px}.workout{width:100%;text-align:left;border:1px solid var(--line);background:var(--card);color:var(--text);padding:20px;border-radius:22px;font:inherit}
-.workout:active{transform:scale(.99)}.workout strong{display:block;font-size:21px;margin-bottom:6px}.workout .sub{color:var(--muted);font-size:15px}.done{float:right;font-size:14px;color:#d8dde6}
-#detail{display:none}.back{border:0;background:none;color:var(--text);font-size:17px;padding:0;margin-bottom:25px}
-.exercise{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0}.exercise h3{margin:0 0 5px;font-size:20px}.last{font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.45}
-.head,.row{display:grid;grid-template-columns:38px 1fr 1fr;gap:8px;align-items:center}.head{font-size:12px;color:var(--muted);padding:0 4px 4px;text-align:center}.set{text-align:center;color:var(--muted)}
-.row{margin:7px 0}.row input{min-width:0;width:100%;font-size:18px;padding:12px 7px;border-radius:11px;border:1px solid var(--line);background:#101318;color:white;text-align:center}
-.notes{margin-top:22px}.notes label{display:block;font-size:18px;font-weight:600;margin-bottom:9px}.notes textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--line);background:var(--card);color:white;padding:13px;font:inherit;font-size:16px}
-.save{width:100%;margin-top:18px;padding:17px;border:0;border-radius:16px;font-size:18px;font-weight:700}.small{color:var(--muted);font-size:13px;margin-top:16px;text-align:center}
-</style>
-</head>
-<body>
-<main>
-<section id="home">
-<h1>🏋️ Salitreeni</h1>
-<h2>Tämän viikon treenit</h2>
-<div class="progress"><div id="bar" style="width:0"></div></div>
-<div class="grid">
-<button class="workout" data-workout="1"><span class="done" id="d1"></span><strong>Treeni 1</strong><span class="sub">Alakroppa – raskas</span></button>
-<button class="workout" data-workout="2"><span class="done" id="d2"></span><strong>Treeni 2</strong><span class="sub">Yläkroppa – kevyt</span></button>
-<button class="workout" data-workout="3"><span class="done" id="d3"></span><strong>Treeni 3</strong><span class="sub">Alakroppa – kevyt</span></button>
-<button class="workout" data-workout="4"><span class="done" id="d4"></span><strong>Treeni 4</strong><span class="sub">Yläkroppa – raskas</span></button>
-</div>
-<p class="small">Tulokset tallennetaan tälle laitteelle.</p>
-</section>
-
-<section id="detail">
-<button class="back" id="back">‹ Viikon treenit</button>
-<h1 id="title">Treeni</h1>
-<div id="exercises"></div>
-<div class="notes">
-<label for="notes">Treenin muistiinpanot</label>
-<textarea id="notes" placeholder="Esim. kulki hyvin, selkä jäykkä, nosta ensi kerralla 2,5 kg..."></textarea>
-</div>
-<button class="save" id="save">Tallenna treeni</button>
-</section>
-</main>
+:root{color-scheme:dark;--b:#0b0d0f;--c:#171a1f;--l:#292e37;--t:#f4f5f7;--m:#9fa6b2}*{box-sizing:border-box}
+body{margin:0;background:var(--b);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:760px;margin:auto;padding:calc(28px + env(safe-area-inset-top)) 20px 110px}h1{font-size:34px;margin:8px 0 44px}h2{font-size:27px;font-weight:500}
+.progress{height:20px;background:var(--c);border:1px solid var(--l);border-radius:20px;margin-bottom:26px;overflow:hidden}.progress div{height:100%;background:#596273}
+.grid{display:grid;gap:14px}.workout,.addExercise{width:100%;text-align:left;border:1px solid var(--l);background:var(--c);color:var(--t);padding:20px;border-radius:22px;font:inherit}
+.workout strong{display:block;font-size:21px;margin-bottom:6px}.sub,.last,.small{color:var(--m)}.done{float:right;font-size:14px}
+#detail{display:none}.back,.addSet,.remove{border:0;background:none;color:var(--t)}.back{font-size:17px;padding:0;margin-bottom:25px}
+.exercise{background:var(--c);border:1px solid var(--l);border-radius:18px;padding:16px;margin:12px 0}.exhead{display:flex;justify-content:space-between}.exercise h3{margin:0 0 5px}.last{font-size:13px;margin-bottom:12px}
+.head,.row{display:grid;grid-template-columns:35px 1fr 1fr 30px;gap:7px;align-items:center}.head{font-size:12px;color:var(--m);text-align:center}.row{margin:7px 0}.set{text-align:center;color:var(--m)}
+.row input{min-width:0;width:100%;font-size:18px;padding:12px 5px;border-radius:11px;border:1px solid var(--l);background:#101318;color:white;text-align:center}.remove{font-size:20px;color:var(--m)}
+.addSet{padding:10px 0;font-size:15px}.addExercise{text-align:center;padding:15px;margin-top:10px}
+textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l);background:var(--c);color:white;padding:13px;font:inherit;font-size:16px}.notes{margin-top:22px}.notes label{display:block;font-size:18px;font-weight:600;margin-bottom:9px}
+.save{width:100%;margin-top:18px;padding:17px;border:0;border-radius:16px;font-size:18px;font-weight:700}
+</style></head><body><main>
+<section id="home"><h1>🏋️ Salitreeni</h1><h2>Tämän viikon treenit</h2><div class="progress"><div id="bar"></div></div><div class="grid">
+<button class="workout" data-n="1"><span class="done" id="d1"></span><strong>Treeni 1</strong><span class="sub">Alakroppa – raskas</span></button>
+<button class="workout" data-n="2"><span class="done" id="d2"></span><strong>Treeni 2</strong><span class="sub">Yläkroppa – kevyt</span></button>
+<button class="workout" data-n="3"><span class="done" id="d3"></span><strong>Treeni 3</strong><span class="sub">Alakroppa – kevyt</span></button>
+<button class="workout" data-n="4"><span class="done" id="d4"></span><strong>Treeni 4</strong><span class="sub">Yläkroppa – raskas</span></button>
+</div><p class="small" style="text-align:center">Tulokset tallennetaan tällä versiolla vielä laitteelle.</p></section>
+<section id="detail"><button class="back" id="back">‹ Viikon treenit</button><h1 id="title"></h1><div id="exercises"></div>
+<button class="addExercise" id="addExercise">＋ Lisää liike</button>
+<div class="notes"><label>Treenin muistiinpanot</label><textarea id="notes" placeholder="Esim. kulki hyvin, nosta ensi kerralla 2,5 kg..."></textarea></div>
+<button class="save" id="saveBtn">Tallenna treeni</button></section></main>
 <script>
-const plans={
-1:["Kyykky","Romanialainen maastaveto","Jalkaprässi","Loitontajat","Lähentäjät"],
-2:["Leuanveto","Penkkipunnerrus","Ylätalja","Pullover taljassa"],
-3:["Jalkaprässi / kevyt","Reiden koukistus","Reiden ojennus","Pohkeet"],
-4:["Vinopenkki","Pystypunnerrus tangolla","Soutu","Ylätalja"]
-};
-let current=0;
-const key="salitreeni-pwa-v1";
-function load(){try{return JSON.parse(localStorage.getItem(key)||'{"history":[]}')}catch(e){return {history:[]}}}
-function dateFI(s){return new Date(s).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric"})}
-function lastFor(n,name){const a=load().history||[];for(let i=a.length-1;i>=0;i--)if(a[i].workout===n&&a[i].exercises[name])return a[i].exercises[name];return null}
-function lastText(x){if(!x)return "Ei aiempaa tulosta";const p=x.filter(v=>v.kg||v.reps).map(v=>(v.kg||"–")+" kg × "+(v.reps||"–"));return p.length?p.join(" / "):"Ei aiempaa tulosta"}
-function openWorkout(n){
- current=n;home.style.display="none";detail.style.display="block";title.textContent="Treeni "+n;notes.value="";exercises.innerHTML="";
- plans[n].forEach(name=>{
-   const d=document.createElement("div");d.className="exercise";d.dataset.name=name;
-   let rows="";for(let s=1;s<=3;s++)rows+=`<div class="row"><div class="set">${s}</div><input class="kg" inputmode="decimal" placeholder="kg"><input class="reps" inputmode="numeric" placeholder="toistot"></div>`;
-   d.innerHTML=`<h3>${name}</h3><div class="last">Viimeksi: ${lastText(lastFor(n,name))}</div><div class="head"><div></div><div>KG</div><div>TOISTOT</div></div>${rows}`;
-   exercises.appendChild(d);
- });scrollTo(0,0)
-}
-function goHome(){detail.style.display="none";home.style.display="block";updateHome();scrollTo(0,0)}
-function saveWorkout(){
- const data=load(),ex={};
- document.querySelectorAll(".exercise").forEach(d=>{
-   const k=d.querySelectorAll(".kg"),r=d.querySelectorAll(".reps"),sets=[];
-   for(let i=0;i<k.length;i++)sets.push({kg:k[i].value,reps:r[i].value});
-   ex[d.dataset.name]=sets;
- });
- data.history.push({workout:current,date:new Date().toISOString(),exercises:ex,notes:notes.value});
- localStorage.setItem(key,JSON.stringify(data));goHome()
-}
-function monday(d){const x=new Date(d),day=(x.getDay()+6)%7;x.setHours(0,0,0,0);x.setDate(x.getDate()-day);return x}
-function updateHome(){
- const a=load().history||[],start=monday(new Date()),done={};
- a.forEach(x=>{if(new Date(x.date)>=start)done[x.workout]=x.date});
- let c=0;for(let n=1;n<=4;n++){const e=document.getElementById("d"+n);if(done[n]){e.textContent="✓ "+dateFI(done[n]);c++}else e.textContent=""}
- bar.style.width=(c*25)+"%"
-}
-document.querySelectorAll("[data-workout]").forEach(b=>b.addEventListener("click",()=>openWorkout(Number(b.dataset.workout))));
-back.addEventListener("click",goHome);save.addEventListener("click",saveWorkout);updateHome();
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
-</script>
-</body></html>
+const base={1:["Kyykky","Romanialainen maastaveto","Jalkaprässi","Loitontajat","Lähentäjät"],2:["Leuanveto","Penkkipunnerrus","Ylätalja","Pullover taljassa"],3:["Jalkaprässi / kevyt","Reiden koukistus","Reiden ojennus","Pohkeet"],4:["Vinopenkki","Pystypunnerrus tangolla","Soutu","Ylätalja"]};
+const K="salitreeni-pwa-v2",OLD="salitreeni-pwa-v1";let cur=0;
+function empty(){return{history:[],custom:{1:[],2:[],3:[],4:[]}}}
+function load(){try{let x=localStorage.getItem(K);if(x)return JSON.parse(x);let o=localStorage.getItem(OLD);if(o){let d=empty();d.history=JSON.parse(o).history||[];store(d);return d}}catch(e){}return empty()}
+function store(d){localStorage.setItem(K,JSON.stringify(d))}
+function names(n){let d=load();return base[n].concat((d.custom&&d.custom[n])||[])}
+function custom(n,x){return (load().custom[n]||[]).includes(x)}
+function last(n,x){let h=load().history||[];for(let i=h.length-1;i>=0;i--)if(h[i].workout===n&&h[i].exercises[x])return h[i].exercises[x]}
+function lastTxt(a){if(!a)return"Ei aiempaa tulosta";let p=a.filter(x=>x.kg||x.reps).map(x=>(x.kg||"–")+" kg × "+(x.reps||"–"));return p.length?p.join(" / "):"Ei aiempaa tulosta"}
+function row(i,del){return `<div class="row"><div class="set">${i}</div><input class="kg" inputmode="decimal" placeholder="kg"><input class="reps" inputmode="numeric" placeholder="toistot">${del?'<button class="remove removeSet">×</button>':'<span></span>'}</div>`}
+function bind(d){d.querySelector(".addSet").onclick=()=>{let r=d.querySelector(".rows"),n=r.children.length;r.insertAdjacentHTML("beforeend",row(n+1,true));bind(d)};
+d.querySelectorAll(".removeSet").forEach(b=>b.onclick=()=>{b.closest(".row").remove();d.querySelectorAll(".set").forEach((s,i)=>s.textContent=i+1)});
+let b=d.querySelector(".removeEx");if(b)b.onclick=()=>{if(confirm("Poistetaanko "+d.dataset.name+"?")){let x=load();x.custom[cur]=x.custom[cur].filter(v=>v!==d.dataset.name);store(x);d.remove()}}}
+function card(name){let d=document.createElement("div");d.className="exercise";d.dataset.name=name;let rx=custom(cur,name)?'<button class="remove removeEx">×</button>':"";
+d.innerHTML=`<div class="exhead"><div><h3>${name}</h3><div class="last">Viimeksi: ${lastTxt(last(cur,name))}</div></div>${rx}</div><div class="head"><div></div><div>KG</div><div>TOISTOT</div><div></div></div><div class="rows">${row(1,false)+row(2,false)+row(3,false)}</div><button class="addSet">＋ Lisää sarja</button>`;bind(d);return d}
+function openW(n){cur=n;home.style.display="none";detail.style.display="block";title.textContent="Treeni "+n;notes.value="";exercises.innerHTML="";names(n).forEach(x=>exercises.appendChild(card(x)));scrollTo(0,0)}
+function goHome(){detail.style.display="none";home.style.display="block";update();scrollTo(0,0)}
+function saveW(){let d=load(),ex={};document.querySelectorAll(".exercise").forEach(e=>{ex[e.dataset.name]=[...e.querySelectorAll(".row")].map(r=>({kg:r.querySelector(".kg").value,reps:r.querySelector(".reps").value}))});d.history.push({workout:cur,date:new Date().toISOString(),exercises:ex,notes:notes.value});store(d);goHome()}
+function update(){let h=load().history||[],now=new Date(),day=(now.getDay()+6)%7,start=new Date(now);start.setHours(0,0,0,0);start.setDate(start.getDate()-day);let done={};h.forEach(x=>{if(new Date(x.date)>=start)done[x.workout]=x.date});let c=0;for(let n=1;n<=4;n++){let e=document.getElementById("d"+n);if(done[n]){e.textContent="✓ "+new Date(done[n]).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric"});c++}else e.textContent=""}bar.style.width=c*25+"%"}
+document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>openW(+b.dataset.n));back.onclick=goHome;saveBtn.onclick=saveW;
+addExercise.onclick=()=>{let name=prompt("Liikkeen nimi");if(!name||!name.trim())return;name=name.trim();if(names(cur).some(x=>x.toLowerCase()===name.toLowerCase()))return alert("Liike on jo tässä treenissä.");let d=load();d.custom[cur].push(name);store(d);exercises.appendChild(card(name))};update();
+if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
+</script></body></html>
