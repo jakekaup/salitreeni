@@ -1,1 +1,3 @@
-Korvaa GitHub-repon juuressa index.html, manifest.webmanifest ja sw.js näillä tiedostoilla. v2 yrittää säilyttää samalla domainilla v1:n paikallisen treenihistorian.
+Salitreeni PWA v2.1
+
+Uutta: liikekohtainen kommentti, edellisen liikekommentin näyttö, yleinen treenimuistiinpano säilyy. Korvaa GitHubissa index.html, manifest.webmanifest ja sw.js.
