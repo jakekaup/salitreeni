@@ -1,10 +1,6 @@
-Salitreeni PWA v3.2 – Supabase
-
-- Supabase Auth: sähköposti + salasana
-- Istunto säilyy selaimessa/PWA:ssa
-- Luo kirjautuneen käyttäjän alle Jarkko- ja Ina-profiilit sekä treenirungot automaattisesti
-- Uudet tallennetut treenit kirjoitetaan Supabaseen (sessions, exercises, sets, comments)
-- Nykyinen localStorage säilyy rinnalla varmistuksena ja nykyisen Viimeksi-näkymän lähteenä
-- Vanhan localStorage-historian migraatio pilveen tehdään seuraavassa vaiheessa
-
-Korvaa GitHubissa index.html, manifest.webmanifest ja sw.js.
+Salitreeni v3.2.1
+Safari/PWA käynnistyskorjaus:
+- DOM-elementit sidotaan eksplisiittisesti eikä luoteta ID-globaaleihin.
+- Käynnistysvirhe näytetään ruudulla mustan näkymän sijaan.
+- Supabase/CDN-pyynnöt ohitetaan service worker -cachesta.
+- Uusi cache-versio pakottaa käyttöliittymän päivittymään.

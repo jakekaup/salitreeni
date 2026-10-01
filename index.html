@@ -48,7 +48,13 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <script>
 const SUPABASE_URL="https://algrtvnqqqidszieieus.supabase.co";
 const SUPABASE_KEY="sb_publishable_NUq7P-deeMl9hkfvxIgjPw_f9lz_m_H";
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+const sb=window.supabase ? window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}}) : null;
+const $=id=>document.getElementById(id);
+const login=$("login"),profiles=$("profiles"),home=$("home"),detail=$("detail"),
+email=$("email"),password=$("password"),loginBtn=$("loginBtn"),loginMsg=$("loginMsg"),
+logoutBtn=$("logoutBtn"),profileBack=$("profileBack"),profileTitle=$("profileTitle"),
+back=$("back"),title=$("title"),exercises=$("exercises"),notes=$("notes"),
+saveBtn=$("saveBtn"),bar=$("bar");
 let cloud={profiles:{},workouts:{},exercises:{}};
 
 const programs={
@@ -136,7 +142,12 @@ async function doLogin(){
   loginBtn.disabled=false;
 }
 function showProfiles(){login.style.display="none";home.style.display="none";detail.style.display="none";profiles.style.display="block";password.value="";scrollTo(0,0)}
+function fatal(msg){
+  login.style.display="block";profiles.style.display="none";home.style.display="none";detail.style.display="none";
+  loginMsg.textContent=msg;
+}
 async function boot(){
+  if(!sb){fatal("Supabase-kirjasto ei latautunut. Tarkista verkkoyhteys ja päivitä sivu.");return}
   const {data:{session}}=await sb.auth.getSession();
   if(!session){login.style.display="block";return}
   try{await ensureCloudStructure();showProfiles()}catch(e){login.style.display="block";loginMsg.textContent="Supabase-yhteysvirhe: "+e.message}
@@ -145,6 +156,7 @@ async function boot(){
 loginBtn.onclick=doLogin;password.addEventListener("keydown",e=>{if(e.key==="Enter")doLogin()});logoutBtn.onclick=async()=>{await sb.auth.signOut();profiles.style.display="none";home.style.display="none";detail.style.display="none";login.style.display="block";loginMsg.textContent=""};
 document.querySelectorAll("[data-profile]").forEach(b=>b.onclick=()=>chooseProfile(b.dataset.profile));profileBack.onclick=toProfiles;document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>openW(+b.dataset.n));back.onclick=goHome;saveBtn.onclick=saveW;
 addExercise.onclick=()=>{let name=prompt("Liikkeen nimi");if(!name||!name.trim())return;name=name.trim();if(names(cur).some(x=>x.toLowerCase()===name.toLowerCase()))return alert("Liike on jo tässä treenissä.");let d=load();d.custom[cur].push(name);store(d);exercises.appendChild(card(name));saveOrder()};
-boot();
+boot().catch(e=>fatal("Käynnistysvirhe: "+e.message));
+window.addEventListener("error",e=>fatal("Sovellusvirhe: "+e.message));
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
 </script></body></html>
