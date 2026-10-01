@@ -1,8 +1,6 @@
-Salitreeni v3.5
-- Inan aiempi 3-jaon esimerkkiohjelma korvattu oikealla taulukko 7:n ohjelmalla:
-  Jalat 1 / Push / Jalat 2 / Pull
-- 19 nykyistä liikettä lisätty ohjelmaan.
-- Taulukko 7:n vanhat liikekohtaiset tulokset näkyvät Historia > Liikkeet -näkymässä.
-- Vanhoille tuloksille ei keksitä päivämääriä, vaan ne näkyvät nimellä 'Vanha taulukko'.
-- Uudet treenit ja niiden historia toimivat edelleen Supabasen kautta.
-- Supabasen workout-kuvaukset päivittyvät uuteen ohjelmaan ja Pull luodaan neljänneksi treeniksi.
+Kaupinkujan Bodarit v3.6
+- Sovelluksen nimi vaihdettu Kaupinkujan Bodareiksi.
+- Uusi hyväksytty logo mukana iPhonen Koti-valikon Apple Touch Iconina.
+- PWA-manifestissa 192x192 ja 512x512 ikonit.
+- Logo näkyy kirjautumisessa ja aloitusnäkymässä.
+- Kaikki v3.5:n Supabase-, historia- ja Inan ohjelmatoiminnot säilyvät.
