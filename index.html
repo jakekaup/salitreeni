@@ -26,7 +26,7 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <input id="password" type="password" autocomplete="current-password" placeholder="Salasana">
 <button class="save" id="loginBtn">Kirjaudu</button>
 <div id="loginMsg" class="small">Yhdistetään Supabaseen…</div>
-<div id="buildInfo" class="small" style="margin-top:8px">Salitreeni v3.2.3</div>
+<div id="buildInfo" class="small" style="margin-top:8px">Salitreeni v3.3</div>
 </div></section>
 <section id="profiles" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><h1>🏋️ Salitreeni</h1><button class="back" id="logoutBtn">Kirjaudu ulos</button></div><h2>Kuka treenaa?</h2>
 <div class="grid">
@@ -56,7 +56,7 @@ email=$("email"),password=$("password"),loginBtn=$("loginBtn"),loginMsg=$("login
 logoutBtn=$("logoutBtn"),profileBack=$("profileBack"),profileTitle=$("profileTitle"),
 back=$("back"),title=$("title"),exercises=$("exercises"),notes=$("notes"),
 saveBtn=$("saveBtn"),bar=$("bar"),addExercise=$("addExercise");
-let cloud={profiles:{},workouts:{},exercises:{}};
+let cloud={profiles:{},workouts:{},exercises:{},history:{jarkko:[],ina:[]}};
 
 const programs={
 jarkko:{1:["Kyykky","Romanialainen maastaveto","Jalkaprässi","Loitontajat","Lähentäjät"],2:["Leuanveto","Penkkipunnerrus","Ylätalja","Pullover taljassa"],3:["Jalkaprässi / kevyt","Reiden koukistus","Reiden ojennus","Pohkeet"],4:["Vinopenkki","Pystypunnerrus tangolla","Soutu","Ylätalja"]},
@@ -71,7 +71,7 @@ function names(n){let d=load(),all=programs[profile][n].concat((d.custom&&d.cust
 function saveOrder(){let d=load();if(!d.order)d.order={1:[],2:[],3:[],4:[]};d.order[cur]=[...document.querySelectorAll(".exercise")].map(e=>e.dataset.name);store(d)}
 function moveCard(el,dir){let t=dir<0?el.previousElementSibling:el.nextElementSibling;if(!t)return;if(dir<0)exercises.insertBefore(el,t);else exercises.insertBefore(t,el);saveOrder()}
 function custom(n,x){return (load().custom[n]||[]).includes(x)}
-function lastEntry(n,x){let h=load().history||[];for(let i=h.length-1;i>=0;i--)if(h[i].workout===n&&h[i].exercises[x])return h[i]}
+function lastEntry(n,x){let ce=cloudLastEntry(n,x);if(ce)return ce;let h=load().history||[];for(let i=h.length-1;i>=0;i--)if(h[i].workout===n&&h[i].exercises[x])return h[i]}
 function last(n,x){let e=lastEntry(n,x);return e?e.exercises[x]:null}
 function lastNote(n,x){let e=lastEntry(n,x);return e&&e.exerciseNotes?e.exerciseNotes[x]||"":""}
 function lastTxt(a){if(!a)return"Ei aiempaa tulosta";let p=a.filter(x=>x.kg||x.reps).map(x=>(x.kg||"–")+" kg × "+(x.reps||"–"));return p.length?p.join(" / "):"Ei aiempaa tulosta"}
@@ -83,9 +83,9 @@ function card(name){let d=document.createElement("div");d.className="exercise";d
 let pn=lastNote(cur,name);d.innerHTML=`<div class="exhead"><div><h3>${name}</h3><div class="last">Viimeksi: ${lastTxt(last(cur,name))}</div>${pn?`<div class="prevnote">💬 Viimeksi: ${pn}</div>`:""}</div><div class="exactions"><button class="move moveUp">↑</button><button class="move moveDown">↓</button>${rx}</div></div><div class="head"><div></div><div>KG</div><div>TOISTOT</div><div></div></div><div class="rows">${row(1,false)+row(2,false)+row(3,false)}</div><button class="addSet">＋ Lisää sarja</button><div class="exnote"><textarea class="exerciseNote" placeholder="Kommentti tästä liikkeestä..."></textarea></div>`;bind(d);return d}
 function openW(n){cur=n;home.style.display="none";detail.style.display="block";title.textContent="Treeni "+n;notes.value="";exercises.innerHTML="";names(n).forEach(x=>exercises.appendChild(card(x)));scrollTo(0,0)}
 function goHome(){detail.style.display="none";home.style.display="block";update();scrollTo(0,0)}
-async function saveW(){saveBtn.disabled=true;saveBtn.textContent="Tallennetaan…";let d=load(),ex={},exerciseNotes={};document.querySelectorAll(".exercise").forEach(e=>{ex[e.dataset.name]=[...e.querySelectorAll(".row")].map(r=>({kg:r.querySelector(".kg").value,reps:r.querySelector(".reps").value}));exerciseNotes[e.dataset.name]=e.querySelector(".exerciseNote").value.trim()});try{await saveCloud(ex,exerciseNotes,notes.value);d.history.push({workout:cur,date:new Date().toISOString(),exercises:ex,exerciseNotes:exerciseNotes,notes:notes.value});store(d);goHome()}catch(e){alert("Tallennus Supabaseen epäonnistui. Treeniä ei merkitty tallennetuksi.\\n\\n"+e.message)}finally{saveBtn.disabled=false;saveBtn.textContent="Tallenna treeni"}}
-function update(){let h=load().history||[],now=new Date(),day=(now.getDay()+6)%7,start=new Date(now);start.setHours(0,0,0,0);start.setDate(start.getDate()-day);let done={};h.forEach(x=>{if(new Date(x.date)>=start)done[x.workout]=x.date});let max=profile==="jarkko"?4:3,c=0;for(let n=1;n<=max;n++){let e=document.getElementById((profile==="jarkko"?"d":"i")+n);if(done[n]){e.textContent="✓ "+new Date(done[n]).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric"});c++}else e.textContent=""}bar.style.width=(c/max*100)+"%"}
-function chooseProfile(p){profile=p;profiles.style.display="none";home.style.display="block";profileTitle.textContent="🏋️ "+(p==="jarkko"?"Jarkko":"Ina");document.querySelectorAll(".jw").forEach(x=>x.style.display=p==="jarkko"?"block":"none");document.querySelectorAll(".iw").forEach(x=>x.style.display=p==="ina"?"block":"none");update()}
+async function saveW(){saveBtn.disabled=true;saveBtn.textContent="Tallennetaan…";let d=load(),ex={},exerciseNotes={};document.querySelectorAll(".exercise").forEach(e=>{ex[e.dataset.name]=[...e.querySelectorAll(".row")].map(r=>({kg:r.querySelector(".kg").value,reps:r.querySelector(".reps").value}));exerciseNotes[e.dataset.name]=e.querySelector(".exerciseNote").value.trim()});try{await saveCloud(ex,exerciseNotes,notes.value);d.history.push({workout:cur,date:new Date().toISOString(),exercises:ex,exerciseNotes:exerciseNotes,notes:notes.value});store(d);await fetchCloudHistory(profile);goHome()}catch(e){alert("Tallennus Supabaseen epäonnistui. Treeniä ei merkitty tallennetuksi.\\n\\n"+e.message)}finally{saveBtn.disabled=false;saveBtn.textContent="Tallenna treeni"}}
+function update(){let h=(cloud.history[profile]&&cloud.history[profile].length)?cloud.history[profile]:(load().history||[]),now=new Date(),day=(now.getDay()+6)%7,start=new Date(now);start.setHours(0,0,0,0);start.setDate(start.getDate()-day);let done={};h.forEach(x=>{if(new Date(x.date)>=start)done[x.workout]=x.date});let max=profile==="jarkko"?4:3,c=0;for(let n=1;n<=max;n++){let e=document.getElementById((profile==="jarkko"?"d":"i")+n);if(done[n]){e.textContent="✓ "+new Date(done[n]).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric"});c++}else e.textContent=""}bar.style.width=(c/max*100)+"%"}
+async function chooseProfile(p){profile=p;profiles.style.display="none";home.style.display="block";profileTitle.textContent="🏋️ "+(p==="jarkko"?"Jarkko":"Ina");document.querySelectorAll(".jw").forEach(x=>x.style.display=p==="jarkko"?"block":"none");document.querySelectorAll(".iw").forEach(x=>x.style.display=p==="ina"?"block":"none");try{await fetchCloudHistory(p)}catch(e){console.error(e)}update()}
 function toProfiles(){home.style.display="none";detail.style.display="none";profiles.style.display="block";scrollTo(0,0)}
 
 async function ensureCloudStructure(){
@@ -119,10 +119,54 @@ async function ensureCloudExercise(name,pos){
   const wid=cloud.workouts[k]; let r=await sb.from("exercises").insert({workout_id:wid,name,position:pos}).select().single();
   if(r.error)throw r.error;if(!cloud.exercises[k])cloud.exercises[k]={};cloud.exercises[k][name]=r.data.id;return r.data.id;
 }
-async function saveCloud(ex,exerciseNotes,generalNotes){
+async function saveCloud(ex,exerciseNotes,generalNotes){return saveCloudAt(ex,exerciseNotes,generalNotes,new Date().toISOString())}
+
+async function fetchCloudHistory(p){
+  const pid=cloud.profiles[p]; if(!pid)return [];
+  const {data:sessions,error}=await sb.from("workout_sessions").select("id,workout_id,performed_at,notes").eq("profile_id",pid).order("performed_at",{ascending:true});
+  if(error)throw error;
+  const out=[];
+  for(const sess of sessions){
+    const wn=Number(Object.entries(cloud.workouts).find(([k,v])=>k.startsWith(p+":")&&v===sess.workout_id)?.[0].split(":")[1]||0);
+    const {data:es,error:ee}=await sb.from("exercise_sessions").select("id,exercise_name,notes,position").eq("session_id",sess.id).order("position");
+    if(ee)throw ee;
+    let exercises={},exerciseNotes={};
+    for(const e of es){
+      const {data:sets,error:se}=await sb.from("exercise_sets").select("set_number,weight,reps").eq("exercise_session_id",e.id).order("set_number");
+      if(se)throw se;
+      exercises[e.exercise_name]=(sets||[]).map(x=>({kg:x.weight==null?"":String(x.weight),reps:x.reps==null?"":String(x.reps)}));
+      exerciseNotes[e.exercise_name]=e.notes||"";
+    }
+    out.push({workout:wn,date:sess.performed_at,exercises,exerciseNotes,notes:sess.notes||"",cloudId:sess.id});
+  }
+  cloud.history[p]=out; return out;
+}
+async function importLocalHistoryOnce(){
+  const flag="salitreeni-cloud-migrated-v1";
+  if(localStorage.getItem(flag)==="1")return;
+  const oldProfile=profile; profile="jarkko";
+  const d=load(),hist=d.history||[];
+  profile=oldProfile;
+  if(!hist.length){localStorage.setItem(flag,"1");return}
+  await fetchCloudHistory("jarkko");
+  const existing=cloud.history.jarkko;
+  let imported=0;
+  for(const h of hist){
+    // Avoid duplicates from the period where v3.2 already dual-saved to local + cloud.
+    const dup=existing.some(c=>c.workout===h.workout && Math.abs(new Date(c.date)-new Date(h.date))<120000);
+    if(dup)continue;
+    const saveProfile=profile,saveCur=cur; profile="jarkko";cur=h.workout;
+    await saveCloudAt(h.exercises||{},h.exerciseNotes||{},h.notes||"",h.date);
+    profile=saveProfile;cur=saveCur; imported++;
+  }
+  await fetchCloudHistory("jarkko");
+  localStorage.setItem(flag,"1");
+  localStorage.setItem("salitreeni-cloud-import-count",String(imported));
+}
+async function saveCloudAt(ex,exerciseNotes,generalNotes,performedAt){
   const pid=cloud.profiles[profile],wid=cloud.workouts[profile+":"+cur];
   if(!pid||!wid)throw new Error("Pilvirakenne ei ole valmis");
-  let r=await sb.from("workout_sessions").insert({profile_id:pid,workout_id:wid,performed_at:new Date().toISOString(),notes:generalNotes}).select().single();
+  let r=await sb.from("workout_sessions").insert({profile_id:pid,workout_id:wid,performed_at:performedAt||new Date().toISOString(),notes:generalNotes}).select().single();
   if(r.error)throw r.error; const sid=r.data.id;
   let pos=0;
   for(const [name,sets] of Object.entries(ex)){
@@ -132,12 +176,17 @@ async function saveCloud(ex,exerciseNotes,generalNotes){
     const rows=sets.map((x,i)=>({exercise_session_id:er.data.id,set_number:i+1,weight:x.kg===""?null:Number(String(x.kg).replace(",",".")),reps:x.reps===""?null:Number(x.reps)})).filter(x=>x.weight!==null||x.reps!==null);
     if(rows.length){let sr=await sb.from("exercise_sets").insert(rows);if(sr.error)throw sr.error}
   }
+  return sid;
 }
+function cloudLastEntry(n,x){
+  const h=cloud.history[profile]||[];for(let i=h.length-1;i>=0;i--)if(h[i].workout===n&&h[i].exercises[x])return h[i];return null
+}
+
 async function doLogin(){
   loginMsg.textContent="Kirjaudutaan…";loginBtn.disabled=true;
   const {error}=await sb.auth.signInWithPassword({email:email.value.trim(),password:password.value});
   if(error){loginMsg.textContent="Kirjautuminen epäonnistui: "+error.message;loginBtn.disabled=false;return}
-  try{await ensureCloudStructure();showProfiles()}catch(e){loginMsg.textContent="Yhteys kantaan epäonnistui: "+e.message}
+  try{await ensureCloudStructure();loginMsg.textContent="Tarkistetaan vanha historia…";await importLocalHistoryOnce();await fetchCloudHistory("jarkko");await fetchCloudHistory("ina");showProfiles()}catch(e){loginMsg.textContent="Yhteys/migraatio epäonnistui: "+e.message}
   loginBtn.disabled=false;
 }
 function showProfiles(){login.style.display="none";home.style.display="none";detail.style.display="none";profiles.style.display="block";password.value="";scrollTo(0,0)}
@@ -151,11 +200,11 @@ async function boot(){
   if(!sb){fatal("Supabase-kirjasto ei latautunut. Tarkista verkkoyhteys ja päivitä sivu.");return}
   const {data:{session}}=await sb.auth.getSession();
   if(!session){login.style.display="block";loginMsg.textContent="";return}
-  try{await ensureCloudStructure();showProfiles()}catch(e){login.style.display="block";loginMsg.textContent="Supabase-yhteysvirhe: "+e.message}
+  try{await ensureCloudStructure();loginMsg.textContent="Tarkistetaan vanha historia…";await importLocalHistoryOnce();await fetchCloudHistory("jarkko");await fetchCloudHistory("ina");showProfiles()}catch(e){login.style.display="block";loginMsg.textContent="Supabase/migraatiovirhe: "+e.message}
 }
 
 loginBtn.onclick=doLogin;password.addEventListener("keydown",e=>{if(e.key==="Enter")doLogin()});logoutBtn.onclick=async()=>{await sb.auth.signOut();profiles.style.display="none";home.style.display="none";detail.style.display="none";login.style.display="block";loginMsg.textContent=""};
-document.querySelectorAll("[data-profile]").forEach(b=>b.onclick=()=>chooseProfile(b.dataset.profile));profileBack.onclick=toProfiles;document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>openW(+b.dataset.n));back.onclick=goHome;saveBtn.onclick=saveW;
+document.querySelectorAll("[data-profile]").forEach(b=>b.onclick=async()=>await chooseProfile(b.dataset.profile));profileBack.onclick=toProfiles;document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>openW(+b.dataset.n));back.onclick=goHome;saveBtn.onclick=saveW;
 addExercise.onclick=()=>{let name=prompt("Liikkeen nimi");if(!name||!name.trim())return;name=name.trim();if(names(cur).some(x=>x.toLowerCase()===name.toLowerCase()))return alert("Liike on jo tässä treenissä.");let d=load();d.custom[cur].push(name);store(d);exercises.appendChild(card(name));saveOrder()};
 boot().catch(e=>fatal("Käynnistysvirhe: "+e.message));
 window.addEventListener("error",e=>fatal("Sovellusvirhe: "+e.message));
@@ -164,7 +213,7 @@ if("serviceWorker"in navigator){
     try{
       const regs=await navigator.serviceWorker.getRegistrations();
       for(const r of regs) await r.unregister();
-      await navigator.serviceWorker.register("./sw.js?v=322");
+      await navigator.serviceWorker.register("./sw.js?v=330");
     }catch(e){}
   });
 }

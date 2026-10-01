@@ -1,4 +1,9 @@
-Salitreeni v3.2.3
-- Korjattu JavaScript-syntaksivirhe, joka esti kaikkien nappien toiminnan.
-- addExercise sidottu eksplisiittisesti Safari/PWA-yhteensopivuutta varten.
-- JavaScript tarkistettu node --check -syntaksitarkistuksella.
+Salitreeni v3.3 – pilvihistoria
+- Jarkon vanha localStorage-historia kopioidaan Supabaseen kerran.
+- localStoragea EI poisteta.
+- Migraatio estää duplikaatteja vertaamalla treenipäivää, treeniä ja aikaa (2 min ikkuna).
+- Viimeksi-tulos ja liikekommentti luetaan ensisijaisesti Supabasesta.
+- Viikon treenimerkinnät luetaan Supabasesta.
+- Uuden treenin jälkeen pilvihistoria päivitetään heti.
+- Ina käyttää samaa pilvihistoriamallia.
+- JavaScript syntax tarkistettu.
