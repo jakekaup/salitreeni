@@ -26,7 +26,7 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <input id="password" type="password" autocomplete="current-password" placeholder="Salasana">
 <button class="save" id="loginBtn">Kirjaudu</button>
 <div id="loginMsg" class="small">Yhdistetään Supabaseen…</div>
-<div id="buildInfo" class="small" style="margin-top:8px">Salitreeni v3.2.2</div>
+<div id="buildInfo" class="small" style="margin-top:8px">Salitreeni v3.2.3</div>
 </div></section>
 <section id="profiles" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><h1>🏋️ Salitreeni</h1><button class="back" id="logoutBtn">Kirjaudu ulos</button></div><h2>Kuka treenaa?</h2>
 <div class="grid">
@@ -55,7 +55,7 @@ const login=$("login"),profiles=$("profiles"),home=$("home"),detail=$("detail"),
 email=$("email"),password=$("password"),loginBtn=$("loginBtn"),loginMsg=$("loginMsg"),
 logoutBtn=$("logoutBtn"),profileBack=$("profileBack"),profileTitle=$("profileTitle"),
 back=$("back"),title=$("title"),exercises=$("exercises"),notes=$("notes"),
-saveBtn=$("saveBtn"),bar=$("bar");
+saveBtn=$("saveBtn"),bar=$("bar"),addExercise=$("addExercise");
 let cloud={profiles:{},workouts:{},exercises:{}};
 
 const programs={
@@ -83,9 +83,7 @@ function card(name){let d=document.createElement("div");d.className="exercise";d
 let pn=lastNote(cur,name);d.innerHTML=`<div class="exhead"><div><h3>${name}</h3><div class="last">Viimeksi: ${lastTxt(last(cur,name))}</div>${pn?`<div class="prevnote">💬 Viimeksi: ${pn}</div>`:""}</div><div class="exactions"><button class="move moveUp">↑</button><button class="move moveDown">↓</button>${rx}</div></div><div class="head"><div></div><div>KG</div><div>TOISTOT</div><div></div></div><div class="rows">${row(1,false)+row(2,false)+row(3,false)}</div><button class="addSet">＋ Lisää sarja</button><div class="exnote"><textarea class="exerciseNote" placeholder="Kommentti tästä liikkeestä..."></textarea></div>`;bind(d);return d}
 function openW(n){cur=n;home.style.display="none";detail.style.display="block";title.textContent="Treeni "+n;notes.value="";exercises.innerHTML="";names(n).forEach(x=>exercises.appendChild(card(x)));scrollTo(0,0)}
 function goHome(){detail.style.display="none";home.style.display="block";update();scrollTo(0,0)}
-async function saveW(){saveBtn.disabled=true;saveBtn.textContent="Tallennetaan…";let d=load(),ex={},exerciseNotes={};document.querySelectorAll(".exercise").forEach(e=>{ex[e.dataset.name]=[...e.querySelectorAll(".row")].map(r=>({kg:r.querySelector(".kg").value,reps:r.querySelector(".reps").value}));exerciseNotes[e.dataset.name]=e.querySelector(".exerciseNote").value.trim()});try{await saveCloud(ex,exerciseNotes,notes.value);d.history.push({workout:cur,date:new Date().toISOString(),exercises:ex,exerciseNotes:exerciseNotes,notes:notes.value});store(d);goHome()}catch(e){alert("Tallennus Supabaseen epäonnistui. Treeniä ei merkitty tallennetuksi.
-
-"+e.message)}finally{saveBtn.disabled=false;saveBtn.textContent="Tallenna treeni"}}
+async function saveW(){saveBtn.disabled=true;saveBtn.textContent="Tallennetaan…";let d=load(),ex={},exerciseNotes={};document.querySelectorAll(".exercise").forEach(e=>{ex[e.dataset.name]=[...e.querySelectorAll(".row")].map(r=>({kg:r.querySelector(".kg").value,reps:r.querySelector(".reps").value}));exerciseNotes[e.dataset.name]=e.querySelector(".exerciseNote").value.trim()});try{await saveCloud(ex,exerciseNotes,notes.value);d.history.push({workout:cur,date:new Date().toISOString(),exercises:ex,exerciseNotes:exerciseNotes,notes:notes.value});store(d);goHome()}catch(e){alert("Tallennus Supabaseen epäonnistui. Treeniä ei merkitty tallennetuksi.\\n\\n"+e.message)}finally{saveBtn.disabled=false;saveBtn.textContent="Tallenna treeni"}}
 function update(){let h=load().history||[],now=new Date(),day=(now.getDay()+6)%7,start=new Date(now);start.setHours(0,0,0,0);start.setDate(start.getDate()-day);let done={};h.forEach(x=>{if(new Date(x.date)>=start)done[x.workout]=x.date});let max=profile==="jarkko"?4:3,c=0;for(let n=1;n<=max;n++){let e=document.getElementById((profile==="jarkko"?"d":"i")+n);if(done[n]){e.textContent="✓ "+new Date(done[n]).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric"});c++}else e.textContent=""}bar.style.width=(c/max*100)+"%"}
 function chooseProfile(p){profile=p;profiles.style.display="none";home.style.display="block";profileTitle.textContent="🏋️ "+(p==="jarkko"?"Jarkko":"Ina");document.querySelectorAll(".jw").forEach(x=>x.style.display=p==="jarkko"?"block":"none");document.querySelectorAll(".iw").forEach(x=>x.style.display=p==="ina"?"block":"none");update()}
 function toProfiles(){home.style.display="none";detail.style.display="none";profiles.style.display="block";scrollTo(0,0)}
