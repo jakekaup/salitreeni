@@ -1,6 +1,6 @@
-Salitreeni v3.2.1
-Safari/PWA käynnistyskorjaus:
-- DOM-elementit sidotaan eksplisiittisesti eikä luoteta ID-globaaleihin.
-- Käynnistysvirhe näytetään ruudulla mustan näkymän sijaan.
-- Supabase/CDN-pyynnöt ohitetaan service worker -cachesta.
-- Uusi cache-versio pakottaa käyttöliittymän päivittymään.
+Salitreeni v3.2.2 debug/fix
+- Kirjautumisnäkymä näkyy jo HTML:ssä ilman JavaScriptiä.
+- Näyttää versionumeron v3.2.2 ruudulla.
+- Vanha service worker poistetaan ja rekisteröidään uudelleen.
+- HTML haetaan verkosta ilman vanhaa PWA-cachea.
+Jos tämäkin näyttää vain mustaa, ongelma ei enää voi olla Supabase-JavaScriptin käynnistymisessä.

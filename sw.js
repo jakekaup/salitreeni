@@ -1,1 +1,10 @@
-const C="salitreeni-v3-2-1";self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(["./","./index.html","./manifest.webmanifest"])))});self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(a=>Promise.all(a.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));self.addEventListener("fetch",e=>{if(e.request.url.includes("cdn.jsdelivr.net")||e.request.url.includes("supabase.co"))return;e.respondWith(fetch(e.request).then(r=>{let q=r.clone();caches.open(C).then(c=>c.put(e.request,q));return r}).catch(()=>caches.match(e.request)))})
+const C="salitreeni-v3-2-2";
+self.addEventListener("install",e=>self.skipWaiting());
+self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
+self.addEventListener("fetch",e=>{
+ const u=new URL(e.request.url);
+ if(u.origin!==location.origin)return;
+ if(e.request.mode==="navigate"){
+   e.respondWith(fetch(e.request,{cache:"no-store"}).catch(()=>caches.match("./index.html")));
+ }
+});

@@ -19,13 +19,14 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 #login input{width:100%;font-size:17px;padding:15px;border-radius:14px;border:1px solid var(--l);background:var(--c);color:white}
 .cloud{font-size:12px;color:var(--m);text-align:center;margin-top:10px}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head><body><main>
-<section id="login" style="display:none">
+<section id="login">
 <h1>🏋️ Salitreeni</h1><h2>Kirjaudu</h2>
 <div class="grid">
 <input id="email" type="email" autocomplete="email" placeholder="Sähköposti">
 <input id="password" type="password" autocomplete="current-password" placeholder="Salasana">
 <button class="save" id="loginBtn">Kirjaudu</button>
-<div id="loginMsg" class="small"></div>
+<div id="loginMsg" class="small">Yhdistetään Supabaseen…</div>
+<div id="buildInfo" class="small" style="margin-top:8px">Salitreeni v3.2.2</div>
 </div></section>
 <section id="profiles" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><h1>🏋️ Salitreeni</h1><button class="back" id="logoutBtn">Kirjaudu ulos</button></div><h2>Kuka treenaa?</h2>
 <div class="grid">
@@ -147,9 +148,11 @@ function fatal(msg){
   loginMsg.textContent=msg;
 }
 async function boot(){
+  login.style.display="block";
+  loginMsg.textContent="Yhdistetään Supabaseen…";
   if(!sb){fatal("Supabase-kirjasto ei latautunut. Tarkista verkkoyhteys ja päivitä sivu.");return}
   const {data:{session}}=await sb.auth.getSession();
-  if(!session){login.style.display="block";return}
+  if(!session){login.style.display="block";loginMsg.textContent="";return}
   try{await ensureCloudStructure();showProfiles()}catch(e){login.style.display="block";loginMsg.textContent="Supabase-yhteysvirhe: "+e.message}
 }
 
@@ -158,5 +161,13 @@ document.querySelectorAll("[data-profile]").forEach(b=>b.onclick=()=>chooseProfi
 addExercise.onclick=()=>{let name=prompt("Liikkeen nimi");if(!name||!name.trim())return;name=name.trim();if(names(cur).some(x=>x.toLowerCase()===name.toLowerCase()))return alert("Liike on jo tässä treenissä.");let d=load();d.custom[cur].push(name);store(d);exercises.appendChild(card(name));saveOrder()};
 boot().catch(e=>fatal("Käynnistysvirhe: "+e.message));
 window.addEventListener("error",e=>fatal("Sovellusvirhe: "+e.message));
-if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
+if("serviceWorker"in navigator){
+  window.addEventListener("load",async()=>{
+    try{
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const r of regs) await r.unregister();
+      await navigator.serviceWorker.register("./sw.js?v=322");
+    }catch(e){}
+  });
+}
 </script></body></html>
