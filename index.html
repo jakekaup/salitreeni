@@ -26,21 +26,22 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <input id="password" type="password" autocomplete="current-password" placeholder="Salasana">
 <button class="save" id="loginBtn">Kirjaudu</button>
 <div id="loginMsg" class="small">Yhdistetään Supabaseen…</div>
-<div id="buildInfo" class="small" style="margin-top:8px">Salitreeni v3.4</div>
+<div id="buildInfo" class="small" style="margin-top:8px">Salitreeni v3.5</div>
 </div></section>
 <section id="profiles" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><h1>🏋️ Salitreeni</h1><button class="back" id="logoutBtn">Kirjaudu ulos</button></div><h2>Kuka treenaa?</h2>
 <div class="grid">
 <button class="workout profile" data-profile="jarkko"><strong>Jarkko</strong><span class="sub">4 treeniä</span></button>
-<button class="workout profile" data-profile="ina"><strong>Ina</strong><span class="sub">3 treeniä</span></button>
+<button class="workout profile" data-profile="ina"><strong>Ina</strong><span class="sub">4 treeniä</span></button>
 </div></section>
 <section id="home" style="display:none"><button class="back" id="profileBack">‹ Aloitus</button><h1 id="profileTitle">🏋️ Salitreeni</h1><h2>Tämän viikon treenit</h2><div class="progress"><div id="bar"></div></div><div class="grid">
 <button class="workout jw" data-n="1"><span class="done" id="d1"></span><strong>Treeni 1</strong><span class="sub">Alakroppa – raskas</span></button>
 <button class="workout jw" data-n="2"><span class="done" id="d2"></span><strong>Treeni 2</strong><span class="sub">Yläkroppa – kevyt</span></button>
 <button class="workout jw" data-n="3"><span class="done" id="d3"></span><strong>Treeni 3</strong><span class="sub">Alakroppa – kevyt</span></button>
 <button class="workout jw" data-n="4"><span class="done" id="d4"></span><strong>Treeni 4</strong><span class="sub">Yläkroppa – raskas</span></button>
-<button class="workout iw" style="display:none" data-n="1"><span class="done" id="i1"></span><strong>Treeni 1</strong><span class="sub">Jalat</span></button>
-<button class="workout iw" style="display:none" data-n="2"><span class="done" id="i2"></span><strong>Treeni 2</strong><span class="sub">Yläkroppa</span></button>
-<button class="workout iw" style="display:none" data-n="3"><span class="done" id="i3"></span><strong>Treeni 3</strong><span class="sub">Jalat + yläkroppa</span></button>
+<button class="workout iw" style="display:none" data-n="1"><span class="done" id="i1"></span><strong>Treeni 1</strong><span class="sub">🍑 Jalat 1</span></button>
+<button class="workout iw" style="display:none" data-n="2"><span class="done" id="i2"></span><strong>Treeni 2</strong><span class="sub">🟥 Push</span></button>
+<button class="workout iw" style="display:none" data-n="3"><span class="done" id="i3"></span><strong>Treeni 3</strong><span class="sub">🟦 Jalat 2</span></button>
+<button class="workout iw" style="display:none" data-n="4"><span class="done" id="i4"></span><strong>Treeni 4</strong><span class="sub">🟦 Pull</span></button>
 </div><p class="small" style="text-align:center">☁️ Supabase yhdistetty · treenit tallennetaan myös pilveen.</p><button class="save" id="historyBtn" style="margin-top:18px">📊 Historia</button></section>
 <section id="history" style="display:none"><button class="back" id="historyBack">‹ Treenit</button><h1 id="historyTitle">Historia</h1><div id="historyList"></div></section>
 <section id="historyDetail" style="display:none"><button class="back" id="historyDetailBack">‹ Historia</button><h1 id="historyDetailTitle"></h1><div id="historyDetailBody"></div></section>
@@ -63,7 +64,28 @@ let cloud={profiles:{},workouts:{},exercises:{},history:{jarkko:[],ina:[]}};
 
 const programs={
 jarkko:{1:["Kyykky","Romanialainen maastaveto","Jalkaprässi","Loitontajat","Lähentäjät"],2:["Leuanveto","Penkkipunnerrus","Ylätalja","Pullover taljassa"],3:["Jalkaprässi / kevyt","Reiden koukistus","Reiden ojennus","Pohkeet"],4:["Vinopenkki","Pystypunnerrus tangolla","Soutu","Ylätalja"]},
-ina:{1:["Kyykky","Jalkaprässi","Reiden koukistus","Reiden ojennus","Pohkeet"],2:["Ylätalja","Soutu","Rintapunnerrus","Pystypunnerrus","Hauiskääntö","Ojentajapunnerrus"],3:["Jalkaprässi","Romanialainen maastaveto","Ylätalja","Rintapunnerrus","Soutu"]}
+ina:{1:["Hip thrust","Kyykky","Takareiskat","Selkäpenkki","Abduktio","Rutistukset"],2:["Penkki kp","Vinopena","Pystypunnerrus","Sivuviparit","Ojentajat talja","Hauiskääntö"],3:["Hex bar mave","Prässi","Reverse hack squat"],4:["Ylätalja","Alasoutu","Pullover taljassa","Reverse fly"]}
+};
+const legacyIna={
+"Hip thrust":["8 × 100 kg","8 × 105–110 kg","8 × 130 kg","8 × 120 kg","8 × 130 kg"],
+"Kyykky":["8 × 50 kg","7–5 × 70 kg","6 × 70 kg","6 × 70 kg","8 × 50 kg","8 × 60 kg"],
+"Takareiskat":["9 × 41 kg","12–8 × 41 kg","8 × 41 kg","8 × 45,5 kg","10 × 45,5 kg"],
+"Selkäpenkki":["10 × 10 kg","10 × 10 kg","10 × 15 kg","8 × 15 kg","9 × 15 kg"],
+"Abduktio":["9 × max","10 × max","10 × 55 kg","8 × max"],
+"Rutistukset":["6 × 10 kg","5 × 15 kg","15 × 60 talja","15 × 60 talja"],
+"Penkki kp":["4 × 40 kg","5 × 40 kg","8 × 32 kg","5 × 40 kg kp"],
+"Vinopena":["8 × 12 kg kp"],
+"Pystypunnerrus":["5 × 30 kg","5 × 28 kg","6 × 30 kg","8 × 20 kg kp"],
+"Sivuviparit":["10 × 10 kg","12 × 12 kg","10 × 14 kg","8 × 16 kg"],
+"Ojentajat talja":["10 × 25 kg","10 × 25 kg","10 × 30 kg","8 × 25 kg"],
+"Hauiskääntö":["Talja","8 × 10 kg","8 × 10 kg","8 × 20 kg","8 × 16 kg kp"],
+"Hex bar mave":["6 × 90 kg","6–8 × 100–110 kg","3 × 110 kg"],
+"Prässi":["8 × 220 kg","8 × 150 kg (musta)"],
+"Reverse hack squat":["8 × 60 kg"],
+"Ylätalja":["6 × 45 kg","8 × 45 kg","8 × 40 kg"],
+"Alasoutu":["6 × 41 kg","6 × 50 kg","8 × 41 kg"],
+"Pullover taljassa":["10 × 30 kg","10 × 30 kg"],
+"Reverse fly":["8 × 27,5 kg","21,5 kg"]
 };
 let profile="jarkko";let cur=0;
 function storageKey(){return profile==="jarkko"?"salitreeni-pwa-v2":"salitreeni-ina-v1"}
@@ -77,31 +99,33 @@ function custom(n,x){return (load().custom[n]||[]).includes(x)}
 function lastEntry(n,x){let ce=cloudLastEntry(n,x);if(ce)return ce;let h=load().history||[];for(let i=h.length-1;i>=0;i--)if(h[i].workout===n&&h[i].exercises[x])return h[i]}
 function last(n,x){let e=lastEntry(n,x);return e?e.exercises[x]:null}
 function lastNote(n,x){let e=lastEntry(n,x);return e&&e.exerciseNotes?e.exerciseNotes[x]||"":""}
-function lastTxt(a){if(!a)return"Ei aiempaa tulosta";let p=a.filter(x=>x.kg||x.reps).map(x=>(x.kg||"–")+" kg × "+(x.reps||"–"));return p.length?p.join(" / "):"Ei aiempaa tulosta"}
+function lastTxt(a,name){if(!a){if(profile==="ina"&&legacyIna[name]?.length)return"Vanha taulukko: "+legacyIna[name][legacyIna[name].length-1];return"Ei aiempaa tulosta";}let p=a.filter(x=>x.kg||x.reps).map(x=>(x.kg||"–")+" kg × "+(x.reps||"–"));return p.length?p.join(" / "):"Ei aiempaa tulosta"}
 function row(i,del){return `<div class="row"><div class="set">${i}</div><input class="kg" inputmode="decimal" placeholder="kg"><input class="reps" inputmode="numeric" placeholder="toistot">${del?'<button class="remove removeSet">×</button>':'<span></span>'}</div>`}
 function bind(d){d.querySelector(".moveUp").onclick=()=>moveCard(d,-1);d.querySelector(".moveDown").onclick=()=>moveCard(d,1);d.querySelector(".addSet").onclick=()=>{let r=d.querySelector(".rows"),n=r.children.length;r.insertAdjacentHTML("beforeend",row(n+1,true));bind(d)};
 d.querySelectorAll(".removeSet").forEach(b=>b.onclick=()=>{b.closest(".row").remove();d.querySelectorAll(".set").forEach((s,i)=>s.textContent=i+1)});
 let b=d.querySelector(".removeEx");if(b)b.onclick=()=>{if(confirm("Oletko ihan varma, että haluat poistaa liikkeen ”"+d.dataset.name+"” tästä treenistä?")){let x=load();x.custom[cur]=x.custom[cur].filter(v=>v!==d.dataset.name);store(x);d.remove();saveOrder()}}}
 function card(name){let d=document.createElement("div");d.className="exercise";d.dataset.name=name;let rx=custom(cur,name)?'<button class="remove removeEx" aria-label="Poista liike">🗑️</button>':"";
-let pn=lastNote(cur,name);d.innerHTML=`<div class="exhead"><div><h3>${name}</h3><div class="last">Viimeksi: ${lastTxt(last(cur,name))}</div>${pn?`<div class="prevnote">💬 Viimeksi: ${pn}</div>`:""}</div><div class="exactions"><button class="move moveUp">↑</button><button class="move moveDown">↓</button>${rx}</div></div><div class="head"><div></div><div>KG</div><div>TOISTOT</div><div></div></div><div class="rows">${row(1,false)+row(2,false)+row(3,false)}</div><button class="addSet">＋ Lisää sarja</button><div class="exnote"><textarea class="exerciseNote" placeholder="Kommentti tästä liikkeestä..."></textarea></div>`;bind(d);return d}
+let pn=lastNote(cur,name);d.innerHTML=`<div class="exhead"><div><h3>${name}</h3><div class="last">Viimeksi: ${lastTxt(last(cur,name),name)}</div>${pn?`<div class="prevnote">💬 Viimeksi: ${pn}</div>`:""}</div><div class="exactions"><button class="move moveUp">↑</button><button class="move moveDown">↓</button>${rx}</div></div><div class="head"><div></div><div>KG</div><div>TOISTOT</div><div></div></div><div class="rows">${row(1,false)+row(2,false)+row(3,false)}</div><button class="addSet">＋ Lisää sarja</button><div class="exnote"><textarea class="exerciseNote" placeholder="Kommentti tästä liikkeestä..."></textarea></div>`;bind(d);return d}
 function openW(n){cur=n;home.style.display="none";detail.style.display="block";title.textContent="Treeni "+n;notes.value="";exercises.innerHTML="";names(n).forEach(x=>exercises.appendChild(card(x)));scrollTo(0,0)}
 function goHome(){detail.style.display="none";home.style.display="block";update();scrollTo(0,0)}
 async function saveW(){saveBtn.disabled=true;saveBtn.textContent="Tallennetaan…";let d=load(),ex={},exerciseNotes={};document.querySelectorAll(".exercise").forEach(e=>{ex[e.dataset.name]=[...e.querySelectorAll(".row")].map(r=>({kg:r.querySelector(".kg").value,reps:r.querySelector(".reps").value}));exerciseNotes[e.dataset.name]=e.querySelector(".exerciseNote").value.trim()});try{await saveCloud(ex,exerciseNotes,notes.value);d.history.push({workout:cur,date:new Date().toISOString(),exercises:ex,exerciseNotes:exerciseNotes,notes:notes.value});store(d);await fetchCloudHistory(profile);goHome()}catch(e){alert("Tallennus Supabaseen epäonnistui. Treeniä ei merkitty tallennetuksi.\\n\\n"+e.message)}finally{saveBtn.disabled=false;saveBtn.textContent="Tallenna treeni"}}
-function update(){let h=(cloud.history[profile]&&cloud.history[profile].length)?cloud.history[profile]:(load().history||[]),now=new Date(),day=(now.getDay()+6)%7,start=new Date(now);start.setHours(0,0,0,0);start.setDate(start.getDate()-day);let done={};h.forEach(x=>{if(new Date(x.date)>=start)done[x.workout]=x.date});let max=profile==="jarkko"?4:3,c=0;for(let n=1;n<=max;n++){let e=document.getElementById((profile==="jarkko"?"d":"i")+n);if(done[n]){e.textContent="✓ "+new Date(done[n]).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric"});c++}else e.textContent=""}bar.style.width=(c/max*100)+"%"}
+function update(){let h=(cloud.history[profile]&&cloud.history[profile].length)?cloud.history[profile]:(load().history||[]),now=new Date(),day=(now.getDay()+6)%7,start=new Date(now);start.setHours(0,0,0,0);start.setDate(start.getDate()-day);let done={};h.forEach(x=>{if(new Date(x.date)>=start)done[x.workout]=x.date});let max=4,c=0;for(let n=1;n<=max;n++){let e=document.getElementById((profile==="jarkko"?"d":"i")+n);if(done[n]){e.textContent="✓ "+new Date(done[n]).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric"});c++}else e.textContent=""}bar.style.width=(c/max*100)+"%"}
 
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function vol(h){let t=0;Object.values(h.exercises||{}).forEach(a=>a.forEach(x=>{let k=Number(String(x.kg||"").replace(",",".")),r=Number(x.reps);if(k>0&&r>0)t+=k*r}));return t}
 function kg(v){return new Intl.NumberFormat("fi-FI",{maximumFractionDigits:1}).format(v)+" kg"}
 function fd(v){return new Date(v).toLocaleDateString("fi-FI")}
-function wname(n){let a=profile==="jarkko"?["","Alakroppa – raskas","Yläkroppa – kevyt","Alakroppa – kevyt","Yläkroppa – raskas"]:["","Jalat","Yläkroppa","Jalat + yläkroppa"];return a[n]||("Treeni "+n)}
+function wname(n){let a=profile==="jarkko"?["","Alakroppa – raskas","Yläkroppa – kevyt","Alakroppa – kevyt","Yläkroppa – raskas"]:["","Jalat 1","Push","Jalat 2","Pull"];return a[n]||("Treeni "+n)}
 function showHistory(){
  home.style.display="none";history.style.display="block";historyDetail.style.display="none";exerciseHistory.style.display="none";historyTitle.textContent=(profile==="jarkko"?"Jarkko":"Ina")+" · Historia";
  let all=cloud.history[profile]||[], rev=[...all].reverse();
- historyList.innerHTML=rev.map((h,i)=>`<button class="workout hs" data-i="${all.length-1-i}"><strong>${fd(h.date)} · Treeni ${h.workout}</strong><span class="sub">${esc(wname(h.workout))}</span><span class="sub">🏋️ Kokonaiskilot: ${kg(vol(h))}</span></button>`).join("")+(rev.length?"":"<div class='card'>Ei vielä treenejä.</div>")+"<h2>Liikkeet</h2>"+[...new Set(rev.flatMap(h=>Object.keys(h.exercises||{})))].sort().map(n=>`<button class="workout hx" data-x="${esc(n)}"><strong>${esc(n)}</strong><span class="sub">Näytä kehitys ›</span></button>`).join("");
+ historyList.innerHTML=rev.map((h,i)=>`<button class="workout hs" data-i="${all.length-1-i}"><strong>${fd(h.date)} · Treeni ${h.workout}</strong><span class="sub">${esc(wname(h.workout))}</span><span class="sub">🏋️ Kokonaiskilot: ${kg(vol(h))}</span></button>`).join("")+(rev.length?"":"<div class='card'>Ei vielä treenejä.</div>")+"<h2>Liikkeet</h2>"+[...new Set(rev.flatMap(h=>Object.keys(h.exercises||{})).concat(profile==="ina"?Object.keys(legacyIna):[]))].sort().map(n=>`<button class="workout hx" data-x="${esc(n)}"><strong>${esc(n)}</strong><span class="sub">Näytä kehitys ›</span></button>`).join("");
  document.querySelectorAll(".hs").forEach(b=>b.onclick=()=>showSession(+b.dataset.i));document.querySelectorAll(".hx").forEach(b=>b.onclick=()=>showEx(b.dataset.x));scrollTo(0,0)
 }
 function showSession(i){let h=cloud.history[profile][i];history.style.display="none";historyDetail.style.display="block";historyDetailTitle.textContent=`Treeni ${h.workout} · ${fd(h.date)}`;let z=`<div class="exercise"><strong>${esc(wname(h.workout))}</strong><div class="sub">🏋️ Kokonaiskilot: ${kg(vol(h))}</div>${h.notes?`<div class="prevnote">💬 ${esc(h.notes)}</div>`:""}</div>`;Object.entries(h.exercises||{}).forEach(([n,a])=>{z+=`<div class="exercise"><h3>${esc(n)}</h3>`+a.filter(x=>x.kg!==""||x.reps!=="").map((x,j)=>`<div class="sub">Sarja ${j+1}: ${esc(x.kg||"–")} kg × ${esc(x.reps||"–")}</div>`).join("")+((h.exerciseNotes||{})[n]?`<div class="prevnote">💬 ${esc(h.exerciseNotes[n])}</div>`:"")+"</div>"});historyDetailBody.innerHTML=z;scrollTo(0,0)}
-function showEx(n){history.style.display="none";exerciseHistory.style.display="block";exerciseHistoryTitle.textContent=n;let a=[...(cloud.history[profile]||[])].reverse().filter(h=>h.exercises&&h.exercises[n]);exerciseHistoryBody.innerHTML=a.map(h=>{let ss=h.exercises[n].filter(x=>x.kg!==""||x.reps!==""),v=ss.reduce((t,x)=>t+(Number(String(x.kg||0).replace(",","."))||0)*(Number(x.reps)||0),0),best=Math.max(0,...ss.map(x=>Number(String(x.kg||0).replace(",","."))||0));return `<div class="exercise"><h3>${fd(h.date)}</h3>${ss.map((x,j)=>`<div class="sub">Sarja ${j+1}: ${esc(x.kg||"–")} kg × ${esc(x.reps||"–")}</div>`).join("")}<div class="sub">Paras paino: ${kg(best)} · Volyymi: ${kg(v)}</div>${(h.exerciseNotes||{})[n]?`<div class="prevnote">💬 ${esc(h.exerciseNotes[n])}</div>`:""}</div>`}).join("");scrollTo(0,0)}
+function showEx(n){history.style.display="none";exerciseHistory.style.display="block";exerciseHistoryTitle.textContent=n;let a=[...(cloud.history[profile]||[])].reverse().filter(h=>h.exercises&&h.exercises[n]);let html=a.map(h=>{let ss=h.exercises[n].filter(x=>x.kg!==""||x.reps!==""),v=ss.reduce((t,x)=>t+(Number(String(x.kg||0).replace(",","."))||0)*(Number(x.reps)||0),0),best=Math.max(0,...ss.map(x=>Number(String(x.kg||0).replace(",","."))||0));return `<div class="exercise"><h3>${fd(h.date)}</h3>${ss.map((x,j)=>`<div class="sub">Sarja ${j+1}: ${esc(x.kg||"–")} kg × ${esc(x.reps||"–")}</div>`).join("")}<div class="sub">Paras paino: ${kg(best)} · Volyymi: ${kg(v)}</div>${(h.exerciseNotes||{})[n]?`<div class="prevnote">💬 ${esc(h.exerciseNotes[n])}</div>`:""}</div>`}).join("");
+if(profile==="ina"&&legacyIna[n]?.length)html+=`<div class="exercise"><h3>Vanha taulukko</h3><div class="small">Alkuperäisessä taulukossa ei ollut päivämääriä.</div>${legacyIna[n].map((x,i)=>`<div class="sub">Tulos ${i+1}: ${esc(x)}</div>`).join("")}</div>`;
+exerciseHistoryBody.innerHTML=html||'<div class="card">Ei historiaa.</div>';scrollTo(0,0)}
 
 async function chooseProfile(p){profile=p;profiles.style.display="none";home.style.display="block";profileTitle.textContent="🏋️ "+(p==="jarkko"?"Jarkko":"Ina");document.querySelectorAll(".jw").forEach(x=>x.style.display=p==="jarkko"?"block":"none");document.querySelectorAll(".iw").forEach(x=>x.style.display=p==="ina"?"block":"none");try{await fetchCloudHistory(p)}catch(e){console.error(e)}update()}
 function toProfiles(){home.style.display="none";detail.style.display="none";profiles.style.display="block";scrollTo(0,0)}
@@ -115,11 +139,12 @@ async function ensureCloudStructure(){
     if(!pr){let r=await sb.from("training_profiles").insert({owner_id:user.id,name}).select().single();if(r.error)throw r.error;pr=r.data;ps.push(pr)}
     const key=name.toLowerCase(); cloud.profiles[key]=pr.id;
     let {data:ws,error:we}=await sb.from("workouts").select("*").eq("profile_id",pr.id); if(we)throw we;
-    const max=key==="jarkko"?4:3;
+    const max=4;
     for(let n=1;n<=max;n++){
-      const desc=key==="jarkko"?["","Alakroppa – raskas","Yläkroppa – kevyt","Alakroppa – kevyt","Yläkroppa – raskas"][n]:["","Jalat","Yläkroppa","Jalat + yläkroppa"][n];
+      const desc=key==="jarkko"?["","Alakroppa – raskas","Yläkroppa – kevyt","Alakroppa – kevyt","Yläkroppa – raskas"][n]:["","Jalat 1","Push","Jalat 2","Pull"][n];
       let w=ws.find(x=>x.position===n);
       if(!w){let r=await sb.from("workouts").insert({profile_id:pr.id,name:"Treeni "+n,description:desc,position:n}).select().single();if(r.error)throw r.error;w=r.data;ws.push(w)}
+      else if(w.description!==desc){let u=await sb.from("workouts").update({description:desc}).eq("id",w.id);if(u.error)throw u.error;w.description=desc}
       cloud.workouts[key+":"+n]=w.id;
       let {data:es,error:ee}=await sb.from("exercises").select("*").eq("workout_id",w.id);if(ee)throw ee;
       cloud.exercises[key+":"+n]={};
@@ -232,7 +257,7 @@ if("serviceWorker"in navigator){
     try{
       const regs=await navigator.serviceWorker.getRegistrations();
       for(const r of regs) await r.unregister();
-      await navigator.serviceWorker.register("./sw.js?v=340");
+      await navigator.serviceWorker.register("./sw.js?v=350");
     }catch(e){}
   });
 }
