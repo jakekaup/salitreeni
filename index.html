@@ -29,12 +29,12 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <input id="password" type="password" autocomplete="current-password" placeholder="Salasana">
 <button class="save" id="loginBtn">Kirjaudu</button>
 <div id="loginMsg" class="small">Yhdistetään Supabaseen…</div>
-<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.6</div>
+<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.8</div>
 </div></section>
 <section id="profiles" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><img src="icon-192.png" alt="" style="width:48px;height:48px;border-radius:22%"><h1 style="margin:0">Kaupinkujan Bodarit</h1></div><button class="back" id="logoutBtn">Kirjaudu ulos</button></div><h2>Kuka treenaa?</h2>
 <div class="grid">
-<button class="workout profile" data-profile="jarkko"><strong>Jarkko</strong><span class="sub">4 treeniä</span></button>
-<button class="workout profile" data-profile="ina"><strong>Ina</strong><span class="sub">4 treeniä</span></button>
+<button class="workout profile" data-profile="jarkko"><strong><img src="king-symbol.jpg" alt="King" style="width:34px;height:34px;object-fit:cover;border-radius:8px;vertical-align:middle;margin-right:8px">Jarkko</strong><span class="sub">4 treeniä</span></button>
+<button class="workout profile" data-profile="ina"><strong><img src="queen-symbol.jpg" alt="Queen" style="width:34px;height:34px;object-fit:cover;border-radius:8px;vertical-align:middle;margin-right:8px">Ina</strong><span class="sub">4 treeniä</span></button>
 </div></section>
 <section id="home" style="display:none"><button class="back" id="profileBack">‹ Aloitus</button><h1 id="profileTitle">Kaupinkujan Bodarit</h1><h2>Tämän viikon treenit</h2><div class="progress"><div id="bar"></div></div><div class="grid">
 <button class="workout jw" data-n="1"><span class="done" id="d1"></span><strong>Treeni 1</strong><span class="sub">Alakroppa – raskas</span></button>
@@ -260,7 +260,7 @@ if("serviceWorker"in navigator){
     try{
       const regs=await navigator.serviceWorker.getRegistrations();
       for(const r of regs) await r.unregister();
-      await navigator.serviceWorker.register("./sw.js?v=360");
+      await navigator.serviceWorker.register("./sw.js?v=380");
     }catch(e){}
   });
 }
