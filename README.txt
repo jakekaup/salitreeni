@@ -1,1 +1,1 @@
-Kaupinkujan Bodarit v3.9: Inalla 3 treeniä. Treeni 3 = Jalat 2 + Pull. Prässi poistettu. Vanha Supabase-historia säilyy.
+v3.11: Supersarjat: paina Yhdistä supersarjaksi kahdessa liikkeessä. Pura pari napista. Parit tallennetaan laitteen selaimeen profiili- ja treenikohtaisesti; varsinaiset sarjat edelleen Supabaseen. Liikkeet ja vanha historia ennallaan.
