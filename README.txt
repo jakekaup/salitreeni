@@ -1,6 +1,1 @@
-Kaupinkujan Bodarit v3.8
-- Profiilivalinnassa käytetään nyt hyväksytyn logon omia symboleita.
-- Jarkon edessä logon K/King-symboli.
-- Inan edessä logon Q/Queen-symboli.
-- Aiemmat chess Unicode -merkit poistettu.
-- Muut v3.7 ominaisuudet ennallaan.
+Kaupinkujan Bodarit v3.9: Inalla 3 treeniä. Treeni 3 = Jalat 2 + Pull. Prässi poistettu. Vanha Supabase-historia säilyy.
