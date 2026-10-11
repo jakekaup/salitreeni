@@ -31,7 +31,7 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <input id="password" type="password" autocomplete="current-password" placeholder="Salasana">
 <button class="save" id="loginBtn">Kirjaudu</button>
 <div id="loginMsg" class="small">Yhdistetään Supabaseen…</div>
-<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.12</div>
+<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.13</div>
 </div></section>
 <section id="profiles" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><img src="icon-192.png" alt="" style="width:48px;height:48px;border-radius:22%"><h1 style="margin:0">Kaupinkujan Bodarit</h1></div><button class="back" id="logoutBtn">Kirjaudu ulos</button></div><h2>Kuka treenaa?</h2>
 <div class="grid">
@@ -90,7 +90,7 @@ const legacyIna={
 "Pullover taljassa":["10 × 30 kg","10 × 30 kg"],
 "Reverse fly":["8 × 27,5 kg","21,5 kg"]
 };
-let profile="jarkko";let cur=0;let superPick=null;
+let profile="jarkko";let cur=0;let superPick=null;let testAccount=false;let authUserId="";
 function superPairs(){return (load().supersets||{})[cur]||[]}
 function superName(pair){return "🔁 "+pair[0]+" + "+pair[1]}
 function isSuper(name){return name.startsWith("🔁 ")&&name.includes(" + ")}
@@ -99,9 +99,9 @@ function saveSuperPairs(pairs){let d=load();if(!d.supersets)d.supersets={};d.sup
 function superSelect(name){if(!superPick){superPick=name;refreshSuper();return}if(superPick===name){superPick=null;refreshSuper();return}let pairs=superPairs().filter(p=>!p.includes(superPick)&&!p.includes(name));pairs.push([superPick,name]);saveSuperPairs(pairs);superPick=null;openW(cur)}
 function refreshSuper(){let pairs=superPairs();let status=document.getElementById('superStatus');status.textContent=superPick?'Valitse toinen liike: '+superPick:pairs.length?'Omat supersarjat: '+pairs.map(superName).join(' · '):'Ei supersarjoja';document.querySelectorAll('.exercise').forEach(el=>{let n=el.dataset.name,b=el.querySelector('.superpick');if(!b)return;b.textContent=superPick===n?'Peru valinta':'Yhdistä supersarjaksi';b.onclick=()=>superSelect(n)})}
 document.getElementById('superClear').onclick=()=>{if(!confirm('Puretaanko supersarjat? Tallennettu historia säilyy.'))return;saveSuperPairs([]);superPick=null;openW(cur)};
-function storageKey(){return profile==="jarkko"?"salitreeni-pwa-v2":"salitreeni-ina-v1"}
+function storageKey(){return testAccount?("kb-test-"+authUserId+"-"+profile):(profile==="jarkko"?"salitreeni-pwa-v2":"salitreeni-ina-v1")}
 function empty(){return{history:[],custom:{1:[],2:[],3:[],4:[]},order:{1:[],2:[],3:[],4:[]}}}
-function load(){try{let x=localStorage.getItem(storageKey());if(x)return JSON.parse(x);if(profile==="jarkko"){let o=localStorage.getItem("salitreeni-pwa-v1");if(o){let d=empty();d.history=JSON.parse(o).history||[];store(d);return d}}}catch(e){}return empty()}
+function load(){try{let x=localStorage.getItem(storageKey());if(x)return JSON.parse(x);if(profile==="jarkko"&&!testAccount){let o=localStorage.getItem("salitreeni-pwa-v1");if(o){let d=empty();d.history=JSON.parse(o).history||[];store(d);return d}}}catch(e){}return empty()}
 function store(d){localStorage.setItem(storageKey(),JSON.stringify(d))}
 function names(n){let d=load(),all=programs[profile][n].concat((d.custom&&d.custom[n])||[]),ord=(d.order&&d.order[n])||[];let out=ord.filter(x=>all.includes(x));all.forEach(x=>{if(!out.includes(x))out.push(x)});let pairs=(d.supersets||{})[n]||[];pairs=pairs.filter(p=>p.every(x=>all.includes(x)));let hidden=new Set(pairs.flat());let done=new Set();return out.flatMap(x=>{if(!hidden.has(x))return [x];let pair=pairs.find(p=>p.includes(x));let key=superName(pair);if(done.has(key))return [];done.add(key);return [key]})}
 function saveOrder(){let d=load();if(!d.order)d.order={1:[],2:[],3:[],4:[]};d.order[cur]=[...document.querySelectorAll(".exercise")].flatMap(e=>isSuper(e.dataset.name)?superParts(e.dataset.name):[e.dataset.name]);store(d)}
@@ -141,11 +141,12 @@ function showEx(n){history.style.display="none";exerciseHistory.style.display="b
 if(profile==="ina"&&legacyIna[n]?.length)html+=`<div class="exercise"><h3>Vanha taulukko</h3><div class="small">Alkuperäisessä taulukossa ei ollut päivämääriä.</div>${legacyIna[n].map((x,i)=>`<div class="sub">Tulos ${i+1}: ${esc(x)}</div>`).join("")}</div>`;
 exerciseHistoryBody.innerHTML=html||'<div class="card">Ei historiaa.</div>';scrollTo(0,0)}
 
-async function chooseProfile(p){profile=p;profiles.style.display="none";home.style.display="block";profileTitle.textContent="🏋️ "+(p==="jarkko"?"Jarkko":"Ina");document.querySelectorAll(".jw").forEach(x=>x.style.display=p==="jarkko"?"block":"none");document.querySelectorAll(".iw").forEach(x=>x.style.display=p==="ina"?"block":"none");try{await fetchCloudHistory(p)}catch(e){console.error(e)}update()}
+async function chooseProfile(p){profile=p;profiles.style.display="none";home.style.display="block";profileTitle.textContent=(testAccount?"🧪 TESTI · ":"🏋️ ")+(p==="jarkko"?"Jarkko":"Ina");document.querySelectorAll(".jw").forEach(x=>x.style.display=p==="jarkko"?"block":"none");document.querySelectorAll(".iw").forEach(x=>x.style.display=p==="ina"?"block":"none");try{await fetchCloudHistory(p)}catch(e){console.error(e)}update()}
 function toProfiles(){home.style.display="none";detail.style.display="none";profiles.style.display="block";scrollTo(0,0)}
 
 async function ensureCloudStructure(){
   const {data:{user},error:ue}=await sb.auth.getUser(); if(ue||!user) throw ue||new Error("Ei käyttäjää");
+  authUserId=user.id;testAccount=Boolean(user.user_metadata?.test_user)||/\+test@/i.test(user.email||"");
   const wantedProfiles=["Jarkko","Ina"];
   let {data:ps,error:pe}=await sb.from("training_profiles").select("*"); if(pe) throw pe;
   for(const name of wantedProfiles){
@@ -199,6 +200,7 @@ async function fetchCloudHistory(p){
   cloud.history[p]=out; return out;
 }
 async function importLocalHistoryOnce(){
+  if(testAccount)return; // Testitunnukselle ei koskaan tuoda vanhaa paikallista historiaa.
   const flag="salitreeni-cloud-migrated-v1";
   if(localStorage.getItem(flag)==="1")return;
   const oldProfile=profile; profile="jarkko";
@@ -243,10 +245,10 @@ async function doLogin(){
   loginMsg.textContent="Kirjaudutaan…";loginBtn.disabled=true;
   const {error}=await sb.auth.signInWithPassword({email:email.value.trim(),password:password.value});
   if(error){loginMsg.textContent="Kirjautuminen epäonnistui: "+error.message;loginBtn.disabled=false;return}
-  try{await ensureCloudStructure();loginMsg.textContent="Tarkistetaan vanha historia…";await importLocalHistoryOnce();await fetchCloudHistory("jarkko");await fetchCloudHistory("ina");showProfiles()}catch(e){loginMsg.textContent="Yhteys/migraatio epäonnistui: "+e.message}
+  try{await ensureCloudStructure();loginMsg.textContent=testAccount?"Avataan testiympäristö…":"Tarkistetaan vanha historia…";if(!testAccount)await importLocalHistoryOnce();await fetchCloudHistory("jarkko");await fetchCloudHistory("ina");showProfiles()}catch(e){loginMsg.textContent="Yhteys/migraatio epäonnistui: "+e.message}
   loginBtn.disabled=false;
 }
-function showProfiles(){login.style.display="none";home.style.display="none";detail.style.display="none";profiles.style.display="block";password.value="";scrollTo(0,0)}
+function showProfiles(){document.querySelector("#profiles h2").textContent=testAccount?"TESTIKÄYTTÄJÄ – Kuka treenaa?":"Kuka treenaa?";login.style.display="none";home.style.display="none";detail.style.display="none";profiles.style.display="block";password.value="";scrollTo(0,0)}
 function fatal(msg){
   login.style.display="block";profiles.style.display="none";home.style.display="none";detail.style.display="none";
   loginMsg.textContent=msg;
@@ -257,7 +259,7 @@ async function boot(){
   if(!sb){fatal("Supabase-kirjasto ei latautunut. Tarkista verkkoyhteys ja päivitä sivu.");return}
   const {data:{session}}=await sb.auth.getSession();
   if(!session){login.style.display="block";loginMsg.textContent="";return}
-  try{await ensureCloudStructure();loginMsg.textContent="Tarkistetaan vanha historia…";await importLocalHistoryOnce();await fetchCloudHistory("jarkko");await fetchCloudHistory("ina");showProfiles()}catch(e){login.style.display="block";loginMsg.textContent="Supabase/migraatiovirhe: "+e.message}
+  try{await ensureCloudStructure();loginMsg.textContent=testAccount?"Avataan testiympäristö…":"Tarkistetaan vanha historia…";if(!testAccount)await importLocalHistoryOnce();await fetchCloudHistory("jarkko");await fetchCloudHistory("ina");showProfiles()}catch(e){login.style.display="block";loginMsg.textContent="Supabase/migraatiovirhe: "+e.message}
 }
 
 historyBtn.onclick=showHistory;historyBack.onclick=()=>{history.style.display="none";home.style.display="block"};historyDetailBack.onclick=showHistory;exerciseHistoryBack.onclick=showHistory;

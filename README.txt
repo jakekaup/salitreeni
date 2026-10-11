@@ -1,1 +1,1 @@
-v3.11: Supersarjat: paina Yhdistä supersarjaksi kahdessa liikkeessä. Pura pari napista. Parit tallennetaan laitteen selaimeen profiili- ja treenikohtaisesti; varsinaiset sarjat edelleen Supabaseen. Liikkeet ja vanha historia ennallaan.
+v3.13 Testitunnus: luo Supabase Authentication > Users > Add user, sähköposti jossa +test@ (esim. omaosoite+test@gmail.com) tai user_metadata.test_user=true. Erillinen Auth-käyttäjä eristää pilvitiedot RLS:n avulla. Testin paikalliset tiedot erotetaan ja vanhaa historiaa ei tuoda. Huom: Supabasen RLS:n oltava käytössä.
