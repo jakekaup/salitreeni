@@ -1,1 +1,6 @@
-v3.13 Testitunnus: luo Supabase Authentication > Users > Add user, sähköposti jossa +test@ (esim. omaosoite+test@gmail.com) tai user_metadata.test_user=true. Erillinen Auth-käyttäjä eristää pilvitiedot RLS:n avulla. Testin paikalliset tiedot erotetaan ja vanhaa historiaa ei tuoda. Huom: Supabasen RLS:n oltava käytössä.
+Kaupinkujan Bodarit v3.16
+- Sisältää kaikki 9 PWA-tiedostoa.
+- Säilyttää v3.14 keskeneräisten kirjausten suojauksen supersarjaa luotaessa.
+- Säilyttää v3.15 tallennuksen ja historian eriytyksen.
+- Tallennusodotukselle 25 sekunnin yläraja ja virheilmoitus.
+- Tarkista historia ennen tallennuksen uusintaa mahdollisen viiveen jälkeen.
