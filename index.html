@@ -31,7 +31,7 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <input id="password" type="password" autocomplete="current-password" placeholder="Salasana">
 <button class="save" id="loginBtn">Kirjaudu</button>
 <div id="loginMsg" class="small">Yhdistetään Supabaseen…</div>
-<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.17</div>
+<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.18</div>
 </div></section>
 <section id="profiles" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><img src="icon-192.png" alt="" style="width:48px;height:48px;border-radius:22%"><h1 style="margin:0">Kaupinkujan Bodarit</h1></div><button class="back" id="logoutBtn">Kirjaudu ulos</button></div><h2>Kuka treenaa?</h2>
 <div class="grid">
@@ -174,7 +174,45 @@ function showHistory(){
 function showSession(i){let h=cloud.history[profile][i];history.style.display="none";historyDetail.style.display="block";historyDetailTitle.textContent=`Treeni ${h.workout} · ${fd(h.date)}`;let z=`<div class="exercise"><strong>${esc(wname(h.workout))}</strong><div class="sub">🏋️ Kokonaiskilot: ${kg(vol(h))}</div>${h.notes?`<div class="prevnote">💬 ${esc(h.notes)}</div>`:""}</div>`;Object.entries(h.exercises||{}).forEach(([n,a])=>{z+=`<div class="exercise"><h3>${esc(n)}</h3>`+a.filter(x=>x.kg!==""||x.reps!=="").map((x,j)=>`<div class="sub">${isSuper(n)?("Kierros "+(Math.floor(j/2)+1)+" · "+(j%2?superParts(n)[1]:superParts(n)[0])):("Sarja "+(j+1))}: ${esc(x.kg||"–")} kg × ${esc(x.reps||"–")}</div>`).join("")+((h.exerciseNotes||{})[n]?`<div class="prevnote">💬 ${esc(h.exerciseNotes[n])}</div>`:"")+"</div>"});historyDetailBody.innerHTML=z;scrollTo(0,0)}
 function showEx(n){history.style.display="none";exerciseHistory.style.display="block";exerciseHistoryTitle.textContent=n;let a=[...(cloud.history[profile]||[])].reverse().filter(h=>h.exercises&&h.exercises[n]);let html=a.map(h=>{let ss=h.exercises[n].filter(x=>x.kg!==""||x.reps!==""),v=ss.reduce((t,x)=>t+(Number(String(x.kg||0).replace(",","."))||0)*(Number(x.reps)||0),0),best=Math.max(0,...ss.map(x=>Number(String(x.kg||0).replace(",","."))||0));return `<div class="exercise"><h3>${fd(h.date)}</h3>${ss.map((x,j)=>`<div class="sub">${isSuper(n)?("Kierros "+(Math.floor(j/2)+1)+" · "+(j%2?superParts(n)[1]:superParts(n)[0])):("Sarja "+(j+1))}: ${esc(x.kg||"–")} kg × ${esc(x.reps||"–")}</div>`).join("")}<div class="sub">Paras paino: ${kg(best)} · Volyymi: ${kg(v)}</div>${(h.exerciseNotes||{})[n]?`<div class="prevnote">💬 ${esc(h.exerciseNotes[n])}</div>`:""}</div>`}).join("");
 if(profile==="ina"&&legacyIna[n]?.length)html+=`<div class="exercise"><h3>Vanha taulukko</h3><div class="small">Alkuperäisessä taulukossa ei ollut päivämääriä.</div>${legacyIna[n].map((x,i)=>`<div class="sub">Tulos ${i+1}: ${esc(x)}</div>`).join("")}</div>`;
-exerciseHistoryBody.innerHTML=html||'<div class="card">Ei historiaa.</div>';scrollTo(0,0)}
+exerciseHistoryBody.innerHTML=html||'<div class="card">Ei historiaa.</div>';addExerciseChart(n);scrollTo(0,0)}
+
+
+// v3.18: historical performance charts, calculated from existing cloud history.
+let chartMetric="weight",chartPeriod="all",chartExercise="";
+function chartNum(v){let n=Number(String(v??"").replace(",","."));return Number.isFinite(n)?n:0}
+function chartSeries(name){let hist=cloud.history[profile]||[];let cutoff=chartPeriod==="all"?0:Date.now()-Number(chartPeriod)*86400000;
+ let parts=isSuper(name)?superParts(name):[name];let series=parts.map(x=>({name:x,points:[]}));
+ hist.forEach(h=>{if(!h.exercises?.[name]||new Date(h.date).getTime()<cutoff)return;
+  let rows=h.exercises[name], groups=parts.map(()=>[]);
+  rows.forEach((r,i)=>{let g=parts.length===2?i%2:0;groups[g].push(r)});
+  groups.forEach((g,i)=>{let valid=g.map(r=>({w:chartNum(r.kg),r:chartNum(r.reps)})).filter(r=>r.w>0&&r.r>0);if(!valid.length)return;
+   let value=chartMetric==="volume"?valid.reduce((a,r)=>a+r.w*r.r,0):chartMetric==="rm"?Math.max(...valid.map(r=>r.w*(1+Math.min(r.r,30)/30))):Math.max(...valid.map(r=>r.w));
+   series[i].points.push({date:new Date(h.date),value});
+  });
+ });
+ series.forEach(x=>x.points.sort((a,b)=>a.date-b.date));return series;
+}
+function renderExerciseChart(){let host=document.getElementById("kbExerciseChart");if(!host)return;
+ let lines=chartSeries(chartExercise),all=lines.flatMap(l=>l.points),unit=chartMetric==="rm"?" kg (arvio)":" kg";
+ if(!all.length){host.innerHTML='<p class="small">Ei vielä päivättyjä tuloksia graafia varten.</p>';return}
+ let W=360,H=215,L=43,R=12,T=14,B=35,max=Math.max(...all.map(x=>x.value)),min=Math.min(...all.map(x=>x.value)),pad=Math.max(2,(max-min)*.15),lo=Math.max(0,min-pad),hi=max+pad;
+ if(hi===lo)hi=lo+1;
+ let times=all.map(x=>x.date.getTime()),start=Math.min(...times),end=Math.max(...times);if(start===end){start-=86400000;end+=86400000}
+ let xx=t=>L+(t-start)/(end-start)*(W-L-R),yy=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+ let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Liikkeen kehitysgraafi" style="width:100%;height:auto;overflow:visible">`;
+ for(let j=0;j<=4;j++){let y=T+j*(H-T-B)/4,val=hi-j*(hi-lo)/4;svg+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#777" stroke-opacity=".25"/><text x="${L-5}" y="${y+4}" fill="currentColor" text-anchor="end" font-size="10">${Math.round(val)}</text>`}
+ let palette=["#e5b75e","#65c5ce"];
+ lines.forEach((line,i)=>{let pts=line.points.map(p=>`${xx(p.date.getTime()).toFixed(1)},${yy(p.value).toFixed(1)}`);if(pts.length>1)svg+=`<polyline points="${pts.join(' ')}" fill="none" stroke="${palette[i%2]}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+ line.points.forEach(p=>svg+=`<circle cx="${xx(p.date.getTime())}" cy="${yy(p.value)}" r="4" fill="${palette[i%2]}"><title>${esc(line.name)} · ${fd(p.date)}: ${p.value.toFixed(1)}${unit}</title></circle>`)});
+ svg+=`<text x="${L}" y="${H-7}" fill="currentColor" font-size="10">${fd(new Date(start))}</text><text x="${W-R}" y="${H-7}" text-anchor="end" fill="currentColor" font-size="10">${fd(new Date(end))}</text></svg>`;
+ let legend=lines.map((line,i)=>{let latest=line.points.at(-1),first=line.points[0];return `<div class="sub"><span style="color:${palette[i%2]}">●</span> ${esc(line.name)}: ${latest?latest.value.toFixed(1)+unit:"–"}${first&&latest&&line.points.length>1?` · Muutos ${(latest.value-first.value)>=0?"+":""}${(latest.value-first.value).toFixed(1)} kg`:""}</div>`}).join("");
+ host.innerHTML=svg+legend;
+}
+function addExerciseChart(name){chartExercise=name;chartMetric="weight";chartPeriod="all";
+ let panel=document.createElement("div");panel.className="exercise";panel.innerHTML=`<h3>📈 Kehitysgraafi</h3><label class="small" for="kbMetric">Mittari</label><select id="kbMetric" style="width:100%;padding:10px;margin:7px 0 12px"><option value="weight">Suurin työpaino</option><option value="volume">Kokonaisvolyymi</option><option value="rm">Arvioitu 1RM</option></select><label class="small" for="kbPeriod">Ajanjakso</label><select id="kbPeriod" style="width:100%;padding:10px;margin:7px 0 12px"><option value="30">1 kuukausi</option><option value="90">3 kuukautta</option><option value="180">6 kuukautta</option><option value="all" selected>Kaikki</option></select><div id="kbExerciseChart"></div><p class="small">1RM on laskennallinen arvio (Epley), ei mitattu maksimi. Supersarjan osat esitetään erillisinä käyrinä.</p>`;
+ exerciseHistoryBody.prepend(panel);
+ panel.querySelector("#kbMetric").onchange=e=>{chartMetric=e.target.value;renderExerciseChart()};panel.querySelector("#kbPeriod").onchange=e=>{chartPeriod=e.target.value;renderExerciseChart()};renderExerciseChart();
+}
 
 async function chooseProfile(p){profile=p;profiles.style.display="none";home.style.display="block";profileTitle.textContent=(testAccount?"🧪 TESTI · ":"🏋️ ")+(p==="jarkko"?"Jarkko":"Ina");document.querySelectorAll(".jw").forEach(x=>x.style.display=p==="jarkko"?"block":"none");document.querySelectorAll(".iw").forEach(x=>x.style.display=p==="ina"?"block":"none");try{await fetchCloudHistory(p)}catch(e){console.error(e)}update()}
 function toProfiles(){home.style.display="none";detail.style.display="none";profiles.style.display="block";scrollTo(0,0)}
@@ -308,7 +346,7 @@ if("serviceWorker"in navigator){
     try{
       const regs=await navigator.serviceWorker.getRegistrations();
       for(const r of regs) await r.unregister();
-      await navigator.serviceWorker.register("./sw.js?v=3160");
+      await navigator.serviceWorker.register("./sw.js?v=3180");
     }catch(e){}
   });
 }
