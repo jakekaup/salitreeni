@@ -31,7 +31,7 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <input id="password" type="password" autocomplete="current-password" placeholder="Salasana">
 <button class="save" id="loginBtn">Kirjaudu</button>
 <div id="loginMsg" class="small">Yhdistetään Supabaseen…</div>
-<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.16</div>
+<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.17</div>
 </div></section>
 <section id="profiles" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><img src="icon-192.png" alt="" style="width:48px;height:48px;border-radius:22%"><h1 style="margin:0">Kaupinkujan Bodarit</h1></div><button class="back" id="logoutBtn">Kirjaudu ulos</button></div><h2>Kuka treenaa?</h2>
 <div class="grid">
@@ -53,7 +53,7 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <section id="detail"><button class="back" id="back">‹ Viikon treenit</button><h1 id="title"></h1><div class="superbar"><strong>🔁 Supersarjat omana liikkeenä</strong><small>Valitse kaksi liikettä. Kirjaa kierrokset yhdessä, seuraa historiassa yhtenä liikkeenä.</small><div id="superStatus"></div><button type="button" id="superClear">Pura supersarjat takaisin liikkeiksi</button></div><div id="exercises"></div>
 <button class="addExercise" id="addExercise">＋ Lisää liike</button>
 <div class="notes"><label>Treenin muistiinpanot</label><textarea id="notes" placeholder="Esim. kulki hyvin, nosta ensi kerralla 2,5 kg..."></textarea></div>
-<button class="save" id="saveBtn">Tallenna treeni</button></section></main>
+<button class="save" id="saveBtn">Päätä treeni</button></section></main>
 <script>
 const SUPABASE_URL="https://algrtvnqqqidszieieus.supabase.co";
 const SUPABASE_KEY="sb_publishable_NUq7P-deeMl9hkfvxIgjPw_f9lz_m_H";
@@ -99,7 +99,7 @@ function saveSuperPairs(pairs){let d=load();if(!d.supersets)d.supersets={};d.sup
 // Preserve unfinished entries when changing the superseries layout.
 function snapshotDraft(){let draft={notes:notes.value,cards:{}};document.querySelectorAll('#exercises .exercise').forEach(el=>{draft.cards[el.dataset.name]={sets:[...el.querySelectorAll('.row')].map(r=>({kg:r.querySelector('.kg')?.value||'',reps:r.querySelector('.reps')?.value||''})),note:el.querySelector('.exerciseNote')?.value||''}});return draft}
 function restoreDraft(draft){if(!draft)return;notes.value=draft.notes||'';document.querySelectorAll('#exercises .exercise').forEach(el=>{let name=el.dataset.name,entry=draft.cards[name];if(!entry&&isSuper(name)){let [a,b]=superParts(name),left=draft.cards[a],right=draft.cards[b];if(left||right){entry={sets:[],note:[left?.note,right?.note].filter(Boolean).join(' | ')};for(let i=0;i<Math.max(left?.sets.length||0,right?.sets.length||0);i++){entry.sets.push(left?.sets[i]||{kg:'',reps:''},right?.sets[i]||{kg:'',reps:''})}}}if(!entry){let pair=Object.keys(draft.cards).find(k=>isSuper(k)&&superParts(k).includes(name));if(pair){let i=superParts(pair).indexOf(name),old=draft.cards[pair];entry={sets:old.sets.filter((_,j)=>j%2===i),note:old.note}}}if(!entry)return;let rows=()=>[...el.querySelectorAll('.row')];while(rows().length<entry.sets.length){let b=el.querySelector('.addRound')||el.querySelector('.addSet');if(!b)break;b.click()}rows().forEach((r,i)=>{let v=entry.sets[i];if(!v)return;r.querySelector('.kg').value=v.kg;r.querySelector('.reps').value=v.reps});let n=el.querySelector('.exerciseNote');if(n)n.value=entry.note||''})}
-function rerenderKeepDraft(){let draft=snapshotDraft();openW(cur);restoreDraft(draft)}
+function rerenderKeepDraft(){let draft=snapshotDraft(),sid=activeSessionId,saved=new Set(savedExerciseNames);openW(cur);activeSessionId=sid;savedExerciseNames=saved;restoreDraft(draft);addPartialButtons();persistDraft()}
 function superSelect(name){if(!superPick){superPick=name;refreshSuper();return}if(superPick===name){superPick=null;refreshSuper();return}let pairs=superPairs().filter(p=>!p.includes(superPick)&&!p.includes(name));pairs.push([superPick,name]);saveSuperPairs(pairs);superPick=null;rerenderKeepDraft()}
 function refreshSuper(){let pairs=superPairs();let status=document.getElementById('superStatus');status.textContent=superPick?'Valitse toinen liike: '+superPick:pairs.length?'Omat supersarjat: '+pairs.map(superName).join(' · '):'Ei supersarjoja';document.querySelectorAll('.exercise').forEach(el=>{let n=el.dataset.name,b=el.querySelector('.superpick');if(!b)return;b.textContent=superPick===n?'Peru valinta':'Yhdistä supersarjaksi';b.onclick=()=>superSelect(n)})}
 document.getElementById('superClear').onclick=()=>{if(!confirm('Puretaanko supersarjat? Tallennettu historia säilyy.'))return;saveSuperPairs([]);superPick=null;rerenderKeepDraft()};
@@ -109,7 +109,7 @@ function load(){try{let x=localStorage.getItem(storageKey());if(x)return JSON.pa
 function store(d){localStorage.setItem(storageKey(),JSON.stringify(d))}
 function names(n){let d=load(),all=programs[profile][n].concat((d.custom&&d.custom[n])||[]),ord=(d.order&&d.order[n])||[];let out=ord.filter(x=>all.includes(x));all.forEach(x=>{if(!out.includes(x))out.push(x)});let pairs=(d.supersets||{})[n]||[];pairs=pairs.filter(p=>p.every(x=>all.includes(x)));let hidden=new Set(pairs.flat());let done=new Set();return out.flatMap(x=>{if(!hidden.has(x))return [x];let pair=pairs.find(p=>p.includes(x));let key=superName(pair);if(done.has(key))return [];done.add(key);return [key]})}
 function saveOrder(){let d=load();if(!d.order)d.order={1:[],2:[],3:[],4:[]};d.order[cur]=[...document.querySelectorAll(".exercise")].flatMap(e=>isSuper(e.dataset.name)?superParts(e.dataset.name):[e.dataset.name]);store(d)}
-function moveCard(el,dir){let t=dir<0?el.previousElementSibling:el.nextElementSibling;if(!t)return;if(dir<0)exercises.insertBefore(el,t);else exercises.insertBefore(t,el);saveOrder();refreshSuper()}
+function moveCard(el,dir){let t=dir<0?el.previousElementSibling:el.nextElementSibling;if(!t)return;if(dir<0)exercises.insertBefore(el,t);else exercises.insertBefore(t,el);saveOrder();refreshSuper();addPartialButtons();scheduleDraft()}
 function custom(n,x){return (load().custom[n]||[]).includes(x)}
 function lastEntry(n,x){let ce=cloudLastEntry(n,x);if(ce)return ce;let h=load().history||[];for(let i=h.length-1;i>=0;i--)if(h[i].workout===n&&h[i].exercises[x])return h[i]}
 function last(n,x){let e=lastEntry(n,x);return e?e.exercises[x]:null}
@@ -124,30 +124,39 @@ function superCard(name){let [a,b]=superParts(name),d=document.createElement('di
 function bindRound(){d.querySelectorAll('.removeRound').forEach(x=>x.onclick=()=>{x.closest('.superround').remove();d.querySelectorAll('.superround strong').forEach((y,i)=>y.textContent='Kierros '+(i+1))})}bindRound();d.querySelector('.addRound').onclick=()=>{d.querySelector('.superrounds').insertAdjacentHTML('beforeend',superRound(d.querySelectorAll('.superround').length+1,a,b,true));bindRound()};d.querySelector('.moveUp').onclick=()=>moveCard(d,-1);d.querySelector('.moveDown').onclick=()=>moveCard(d,1);return d}
 function card(name){if(isSuper(name))return superCard(name);let d=document.createElement("div");d.className="exercise";d.dataset.name=name;let rx=custom(cur,name)?'<button class="remove removeEx" aria-label="Poista liike">🗑️</button>':"";
 let pn=lastNote(cur,name);d.innerHTML=`<div class="supertag"></div><button type="button" class="superpick">Yhdistä supersarjaksi</button><div class="exhead"><div><h3>${name}</h3><div class="last">Viimeksi: ${lastTxt(last(cur,name),name)}</div>${pn?`<div class="prevnote">💬 Viimeksi: ${pn}</div>`:""}</div><div class="exactions"><button class="move moveUp">↑</button><button class="move moveDown">↓</button>${rx}</div></div><div class="head"><div></div><div>KG</div><div>TOISTOT</div><div></div></div><div class="rows">${row(1,false)+row(2,false)+row(3,false)}</div><button class="addSet">＋ Lisää sarja</button><div class="exnote"><textarea class="exerciseNote" placeholder="Kommentti tästä liikkeestä..."></textarea></div>`;bind(d);return d}
-function openW(n){cur=n;superPick=null;home.style.display="none";detail.style.display="block";title.textContent="Treeni "+n;notes.value="";exercises.innerHTML="";names(n).forEach(x=>exercises.appendChild(card(x)));refreshSuper();scrollTo(0,0)}
+let activeSessionId=null, savedExerciseNames=new Set(), draftTimer=null;
+function draftKey(){return "kb-draft-v317-"+authUserId+"-"+profile+"-"+cur}
+function persistDraft(){if(!profile||!cur||detail.style.display==="none")return;try{localStorage.setItem(draftKey(),JSON.stringify(snapshotDraft()))}catch(e){console.warn(e)}}
+function scheduleDraft(){clearTimeout(draftTimer);draftTimer=setTimeout(persistDraft,350)}
+function exercisePayload(el){let rows=[...el.querySelectorAll(".row")].map(r=>({kg:r.querySelector(".kg").value,reps:r.querySelector(".reps").value}));return {name:el.dataset.name,rows,note:el.querySelector(".exerciseNote")?.value.trim()||""}}
+async function ensureActiveSession(){if(activeSessionId)return activeSessionId;const pid=cloud.profiles[profile],wid=cloud.workouts[profile+":"+cur];if(!pid||!wid)throw Error("Pilvirakenne ei ole valmis");const {data,error}=await sb.from("workout_sessions").insert({profile_id:pid,workout_id:wid,performed_at:new Date().toISOString(),notes:notes.value}).select("id").single();if(error)throw error;activeSessionId=data.id;return activeSessionId}
+async function writeExercise(el){
+ const v=exercisePayload(el);if(!v.rows.some(r=>r.kg!==""||r.reps!==""))throw Error("Kirjaa ensin sarja");
+ const sid=await ensureActiveSession(),position=[...exercises.children].indexOf(el)+1,eid=await ensureCloudExercise(v.name,position);
+ const {data:old,error:oldErr}=await sb.from("exercise_sessions").select("id").eq("session_id",sid).eq("exercise_name",v.name);
+ if(oldErr)throw oldErr;
+ for(const item of old||[]){let q=await sb.from("exercise_sets").delete().eq("exercise_session_id",item.id);if(q.error)throw q.error;q=await sb.from("exercise_sessions").delete().eq("id",item.id);if(q.error)throw q.error}
+ const {data:er,error}=await sb.from("exercise_sessions").insert({session_id:sid,exercise_id:eid,exercise_name:v.name,position,notes:v.note||null}).select("id").single();if(error)throw error;
+ const rows=v.rows.map((r,i)=>({exercise_session_id:er.id,set_number:i+1,weight:r.kg===""?null:Number(r.kg.replace(",",".")),reps:r.reps===""?null:Number(r.reps)})).filter(r=>r.weight!==null||r.reps!==null);
+ if(rows.length){let q=await sb.from("exercise_sets").insert(rows);if(q.error)throw q.error}
+ savedExerciseNames.add(v.name);persistDraft();return v.name
+}
+function addPartialButtons(){document.querySelectorAll("#exercises .exercise").forEach(el=>{if(el.querySelector(".partialSave"))return;let b=document.createElement("button");b.type="button";b.className="partialSave";b.textContent="☁️ Tallenna liike";b.style.cssText="display:block;width:100%;padding:12px;margin-top:12px;border-radius:12px;background:#3c4637;color:white;border:1px solid #7b946d;font-weight:700";b.onclick=async()=>{if(b.disabled)return;b.disabled=true;b.textContent="Tallennetaan liikettä…";persistDraft();try{await Promise.race([writeExercise(el),new Promise((_,reject)=>setTimeout(()=>reject(Error("Aikakatkaisu. Tarkista historia ennen uudelleenyritystä.")),25000))]);b.textContent="✓ Tallennettu pilveen";}catch(e){b.textContent="☁️ Yritä tallentaa uudelleen";alert("Liikkeen tallennus epäonnistui: "+(e.message||e))}finally{b.disabled=false}};el.appendChild(b)})}
+function openW(n){cur=n;superPick=null;home.style.display="none";detail.style.display="block";title.textContent="Treeni "+n;notes.value="";exercises.innerHTML="";names(n).forEach(x=>exercises.appendChild(card(x)));refreshSuper();addPartialButtons();activeSessionId=null;savedExerciseNames=new Set();try{let d=JSON.parse(localStorage.getItem(draftKey())||"null");if(d)restoreDraft(d)}catch(e){}scrollTo(0,0)}
 function goHome(){detail.style.display="none";home.style.display="block";update();scrollTo(0,0)}
 async function saveW(){
-  if(saveBtn.disabled)return;
-  saveBtn.disabled=true;saveBtn.textContent="Tallennetaan…";
-  let d=load(),ex={},exerciseNotes={};
-  document.querySelectorAll(".exercise").forEach(e=>{
-    let rows=[...e.querySelectorAll(".row")].map(r=>({kg:r.querySelector(".kg").value,reps:r.querySelector(".reps").value}));
-    if(rows.some(r=>r.kg!==""||r.reps!=="")){ex[e.dataset.name]=rows;exerciseNotes[e.dataset.name]=e.querySelector(".exerciseNote").value.trim()}
-  });
-  if(!Object.keys(ex).length){alert("Kirjaa ensin vähintään yksi sarja.");saveBtn.disabled=false;saveBtn.textContent="Tallenna treeni";return}
-  let completed=false;
-  let warning=setTimeout(()=>{if(!completed)saveBtn.textContent="Tallennus kestää… odota"},12000);
-  try{
-    // Supabase-odotus ei saa lukita tallennuspainiketta loputtomiin.
-    await Promise.race([saveCloud(ex,exerciseNotes,notes.value),new Promise((_,reject)=>setTimeout(()=>reject(new Error("Tallennus ei vastannut 25 sekunnissa. Tarkista historiasta ennen uutta yritystä, ettei treeni tallentunut kahdesti.")),25000))]);
-    completed=true;
-    d.history.push({workout:cur,date:new Date().toISOString(),exercises:ex,exerciseNotes,notes:notes.value});store(d);
-    goHome();
-    // Historian haku ei saa estää onnistuneen tallennuksen valmistumista.
-    fetchCloudHistory(profile).then(()=>update()).catch(e=>console.warn("Historian päivitys epäonnistui",e));
-  }catch(e){
-    alert("Tallennus epäonnistui. Älä yritä heti uudelleen ennen kuin tarkistat historiasta, tallentuiko treeni.\n\n"+(e?.message||String(e)));
-  }finally{completed=true;clearTimeout(warning);saveBtn.disabled=false;saveBtn.textContent="Tallenna treeni"}
+ if(saveBtn.disabled)return;
+ persistDraft();saveBtn.disabled=true;saveBtn.textContent="Tallennetaan…";
+ try{
+  const els=[...document.querySelectorAll("#exercises .exercise")].filter(el=>{let v=exercisePayload(el);return v.rows.some(r=>r.kg!==""||r.reps!=="")});
+  if(!els.length)throw Error("Kirjaa ensin vähintään yksi sarja.");
+  // Already saved exercises are updated to include edits made after partial save.
+  for(const el of els){saveBtn.textContent="Tallennetaan "+(els.indexOf(el)+1)+"/"+els.length+"…";await Promise.race([writeExercise(el),new Promise((_,reject)=>setTimeout(()=>reject(Error("Tallennus aikakatkaistiin. Tarkista historia ennen uudelleenyritystä.")),25000))])}
+  let q=await sb.from("workout_sessions").update({notes:notes.value}).eq("id",activeSessionId);if(q.error)throw q.error;
+  localStorage.removeItem(draftKey());activeSessionId=null;savedExerciseNames=new Set();
+  goHome();fetchCloudHistory(profile).then(update).catch(console.warn);
+ }catch(e){alert("Tallennus ei valmistunut. Jo välitallennetut liikkeet ovat pilvessä. Älä poista luonnosta.\n\n"+(e.message||e))}
+ finally{saveBtn.disabled=false;saveBtn.textContent="Päätä treeni"}
 }
 function update(){let h=(cloud.history[profile]&&cloud.history[profile].length)?cloud.history[profile]:(load().history||[]),now=new Date(),day=(now.getDay()+6)%7,start=new Date(now);start.setHours(0,0,0,0);start.setDate(start.getDate()-day);let done={};h.forEach(x=>{if(new Date(x.date)>=start)done[x.workout]=x.date});let max=profile==="jarkko"?4:3,c=0;for(let n=1;n<=max;n++){let e=document.getElementById((profile==="jarkko"?"d":"i")+n);if(done[n]){e.textContent="✓ "+new Date(done[n]).toLocaleDateString("fi-FI",{day:"numeric",month:"numeric"});c++}else e.textContent=""}bar.style.width=(c/max*100)+"%"}
 
@@ -290,8 +299,8 @@ async function boot(){
 
 historyBtn.onclick=showHistory;historyBack.onclick=()=>{history.style.display="none";home.style.display="block"};historyDetailBack.onclick=showHistory;exerciseHistoryBack.onclick=showHistory;
 loginBtn.onclick=doLogin;password.addEventListener("keydown",e=>{if(e.key==="Enter")doLogin()});logoutBtn.onclick=async()=>{await sb.auth.signOut();profiles.style.display="none";home.style.display="none";detail.style.display="none";login.style.display="block";loginMsg.textContent=""};
-document.querySelectorAll("[data-profile]").forEach(b=>b.onclick=async()=>await chooseProfile(b.dataset.profile));profileBack.onclick=toProfiles;document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>openW(+b.dataset.n));back.onclick=goHome;saveBtn.onclick=saveW;
-addExercise.onclick=()=>{let name=prompt("Liikkeen nimi");if(!name||!name.trim())return;name=name.trim();if(names(cur).some(x=>x.toLowerCase()===name.toLowerCase()))return alert("Liike on jo tässä treenissä.");let d=load();d.custom[cur].push(name);store(d);exercises.appendChild(card(name));saveOrder();refreshSuper()};
+document.querySelectorAll("[data-profile]").forEach(b=>b.onclick=async()=>await chooseProfile(b.dataset.profile));profileBack.onclick=toProfiles;document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>openW(+b.dataset.n));back.onclick=goHome;saveBtn.onclick=saveW;detail.addEventListener("input",scheduleDraft);detail.addEventListener("change",scheduleDraft);
+addExercise.onclick=()=>{let name=prompt("Liikkeen nimi");if(!name||!name.trim())return;name=name.trim();if(names(cur).some(x=>x.toLowerCase()===name.toLowerCase()))return alert("Liike on jo tässä treenissä.");let d=load();d.custom[cur].push(name);store(d);exercises.appendChild(card(name));saveOrder();refreshSuper();addPartialButtons();scheduleDraft()};
 boot().catch(e=>fatal("Käynnistysvirhe: "+e.message));
 window.addEventListener("error",e=>fatal("Sovellusvirhe: "+e.message));
 if("serviceWorker"in navigator){
