@@ -77,7 +77,7 @@ function bankCustom(){try{return JSON.parse(localStorage.getItem(bankKey())||"[]
 function allBank(){const map=new Map();for(const e of [...baseBank,...bankCustom()])map.set(e.name.toLocaleLowerCase('fi'),e);return [...map.values()].sort((a,b)=>a.name.localeCompare(b.name,'fi'))}
 function openBank(origin){bankOrigin=origin;home.style.display="none";detail.style.display="none";document.getElementById("bankScreen").style.display="block";document.getElementById("bankSearch").value="";renderBank();scrollTo(0,0)}
 function closeBank(){document.getElementById("bankScreen").style.display="none";(bankOrigin==="workout"?detail:home).style.display="block"}
-function renderBank(){const data=allBank(),mus=document.getElementById("bankMuscle"),typ=document.getElementById("bankType");let m=mus.value,t=typ.value;mus.innerHTML='<option>Kaikki lihasryhmät</option>'+[...new Set(data.map(x=>x.muscle))].sort().map(x=>'<option>'+x+'</option>').join('');typ.innerHTML='<option>Kaikki tyypit</option>'+[...new Set(data.flatMap(x=>[x.pattern,x.type]))].sort().map(x=>'<option>'+x+'</option>').join('');if([...mus.options].some(o=>o.value===m))mus.value=m;if([...typ.options].some(o=>o.value===t))typ.value=t;const q=document.getElementById("bankSearch").value.trim().toLocaleLowerCase('fi');const host=document.getElementById("bankResults");host.replaceChildren();let filtered=data.filter(x=>(mus.value==="Kaikki lihasryhmät"||x.muscle===mus.value)&&(typ.value==="Kaikki tyypit"||x.pattern===typ.value||x.type===typ.value)&&x.name.toLocaleLowerCase('fi').includes(q));let count=document.createElement('p');count.className='small';count.textContent=filtered.length+' liikettä';host.appendChild(count);for(const e of filtered){let div=document.createElement('div');div.className='card';div.style.marginBottom='8px';let label=document.createElement('div');label.textContent=e.name;label.style.fontWeight='700';let sub=document.createElement('div');sub.className='small';sub.textContent=e.muscle+' · '+e.pattern+' · '+e.type;div.append(label,sub);if(bankOrigin==='workout'){let btn=document.createElement('button');btn.className='addExercise';btn.textContent='＋ Lisää treeniin';btn.onclick=()=>{if(names(cur).some(x=>x.toLocaleLowerCase('fi')===e.name.toLocaleLowerCase('fi')))return alert('Liike on jo treenissä');let d=load();d.custom[cur].push(e.name);store(d);exercises.appendChild(card(e.name));saveOrder();refreshSuper();addPartialButtons();scheduleDraft();closeBank()};div.appendChild(btn)}host.appendChild(div)}}
+function renderBank(){const data=allBank(),mus=document.getElementById("bankMuscle"),typ=document.getElementById("bankType");let m=mus.value,t=typ.value;mus.innerHTML='<option>Kaikki lihasryhmät</option>'+[...new Set(data.map(x=>x.muscle))].sort().map(x=>'<option>'+x+'</option>').join('');typ.innerHTML='<option>Kaikki tyypit</option>'+[...new Set(data.flatMap(x=>[x.pattern,x.type]))].sort().map(x=>'<option>'+x+'</option>').join('');if([...mus.options].some(o=>o.value===m))mus.value=m;if([...typ.options].some(o=>o.value===t))typ.value=t;const q=document.getElementById("bankSearch").value.trim().toLocaleLowerCase('fi');const host=document.getElementById("bankResults");host.replaceChildren();let filtered=data.filter(x=>(mus.value==="Kaikki lihasryhmät"||x.muscle===mus.value)&&(typ.value==="Kaikki tyypit"||x.pattern===typ.value||x.type===typ.value)&&x.name.toLocaleLowerCase('fi').includes(q));let count=document.createElement('p');count.className='small';count.textContent=filtered.length+' liikettä';host.appendChild(count);for(const e of filtered){let div=document.createElement('div');div.className='card';div.style.marginBottom='8px';let label=document.createElement('div');label.textContent=e.name;label.style.fontWeight='700';let sub=document.createElement('div');sub.className='small';sub.textContent=e.muscle+' · '+e.pattern+' · '+e.type;div.append(label,sub);if(bankOrigin==='workout'){let btn=document.createElement('button');btn.className='addExercise';btn.textContent='＋ Lisää treeniin';btn.onclick=()=>{if(names(cur).some(x=>x.toLocaleLowerCase('fi')===e.name.toLocaleLowerCase('fi')))return alert('Liike on jo treenissä');let d=load();d.custom[cur].push(e.name);store(d);exercises.appendChild(card(e.name));saveOrder();refreshSuper();addPartialButtons();scheduleDraft();ensureCloudExercise(e.name,names(cur).length).catch(err=>alert("Liikkeen pilvitallennus epäonnistui: "+err.message));closeBank()};div.appendChild(btn)}host.appendChild(div)}}
 document.getElementById('bankHomeBtn').onclick=()=>openBank('home');
 document.getElementById('bankBack').onclick=closeBank;
 document.getElementById('bankSearch').oninput=renderBank;
@@ -121,7 +121,7 @@ function storageKey(){return testAccount?("kb-test-"+authUserId+"-"+profile):(pr
 function empty(){return{history:[],custom:{1:[],2:[],3:[],4:[]},order:{1:[],2:[],3:[],4:[]}}}
 function load(){try{let x=localStorage.getItem(storageKey());if(x)return JSON.parse(x);if(profile==="jarkko"&&!testAccount){let o=localStorage.getItem("salitreeni-pwa-v1");if(o){let d=empty();d.history=JSON.parse(o).history||[];store(d);return d}}}catch(e){}return empty()}
 function store(d){localStorage.setItem(storageKey(),JSON.stringify(d))}
-function names(n){let d=load(),all=programs[profile][n].concat((d.custom&&d.custom[n])||[]),ord=(d.order&&d.order[n])||[];let out=ord.filter(x=>all.includes(x));all.forEach(x=>{if(!out.includes(x))out.push(x)});let pairs=(d.supersets||{})[n]||[];pairs=pairs.filter(p=>p.every(x=>all.includes(x)));let hidden=new Set(pairs.flat());let done=new Set();return out.flatMap(x=>{if(!hidden.has(x))return [x];let pair=pairs.find(p=>p.includes(x));let key=superName(pair);if(done.has(key))return [];done.add(key);return [key]})}
+function names(n){let d=load(),all=[...new Set([...(programs[profile][n]||[]),...Object.keys(cloud.exercises[profile+":"+n]||{}),...((d.custom&&d.custom[n])||[])])],ord=(d.order&&d.order[n])||[];let out=ord.filter(x=>all.includes(x));all.forEach(x=>{if(!out.includes(x))out.push(x)});let pairs=(d.supersets||{})[n]||[];pairs=pairs.filter(p=>p.every(x=>all.includes(x)));let hidden=new Set(pairs.flat());let done=new Set();return out.flatMap(x=>{if(!hidden.has(x))return [x];let pair=pairs.find(p=>p.includes(x));let key=superName(pair);if(done.has(key))return [];done.add(key);return [key]})}
 function saveOrder(){let d=load();if(!d.order)d.order={1:[],2:[],3:[],4:[]};d.order[cur]=[...document.querySelectorAll(".exercise")].flatMap(e=>isSuper(e.dataset.name)?superParts(e.dataset.name):[e.dataset.name]);store(d)}
 function moveCard(el,dir){let t=dir<0?el.previousElementSibling:el.nextElementSibling;if(!t)return;if(dir<0)exercises.insertBefore(el,t);else exercises.insertBefore(t,el);saveOrder();refreshSuper();addPartialButtons();scheduleDraft()}
 function custom(n,x){return (load().custom[n]||[]).includes(x)}
@@ -228,7 +228,42 @@ function addExerciseChart(name){chartExercise=name;chartMetric="weight";chartPer
  panel.querySelector("#kbMetric").onchange=e=>{chartMetric=e.target.value;renderExerciseChart()};panel.querySelector("#kbPeriod").onchange=e=>{chartPeriod=e.target.value;renderExerciseChart()};renderExerciseChart();
 }
 
-async function chooseProfile(p){profile=p;profiles.style.display="none";home.style.display="block";profileTitle.textContent=(testAccount?"🧪 TESTI · ":"🏋️ ")+(p==="jarkko"?"Jarkko":"Ina");document.querySelectorAll(".jw").forEach(x=>x.style.display=p==="jarkko"?"block":"none");document.querySelectorAll(".iw").forEach(x=>x.style.display=p==="ina"?"block":"none");try{await fetchCloudHistory(p)}catch(e){console.error(e)}update()}
+function workoutCount(p){return Math.max(p==="jarkko"?4:3,...Object.keys(cloud.workoutTitles[p]||{}).map(Number))}
+function workoutTitle(p,n){return cloud.workoutTitles[p]?.[n]||("Treeni "+n)}
+function renderWorkoutCards(){
+  document.querySelectorAll(".extraWorkout").forEach(x=>x.remove());
+  const max=workoutCount(profile),base=profile==="jarkko"?4:3;
+  const grid=document.querySelector("#home .grid");
+  for(let n=base+1;n<=max;n++){
+    if(!cloud.workouts[profile+":"+n])continue;
+    let b=document.createElement("button");b.className="workout extraWorkout";b.dataset.n=n;
+    const done=document.createElement("span");done.className="done";done.id=(profile==="jarkko"?"d":"i")+n;
+    const strong=document.createElement("strong");strong.textContent="Treeni "+n;
+    const sub=document.createElement("span");sub.className="sub";sub.textContent=workoutTitle(profile,n);
+    b.append(done,strong,sub);b.onclick=()=>openW(n);grid.appendChild(b);
+  }
+  document.querySelectorAll("#profiles .profile").forEach(b=>{const p=b.dataset.profile;b.querySelector(".sub").textContent=workoutCount(p)+" treeniä"});
+}
+async function createWorkout(){
+  const raw=prompt("Uuden treenin nimi (esim. Koko kroppa tai Yläkroppa 3):");
+  if(raw===null)return;
+  const name=raw.trim();
+  if(!name)return alert("Anna treenille nimi.");
+  if(name.length>80)return alert("Nimi saa olla enintään 80 merkkiä.");
+  const n=workoutCount(profile)+1,pid=cloud.profiles[profile];
+  if(!pid)return alert("Pilviyhteys ei ole valmis.");
+  const b=document.getElementById("newWorkoutBtn");b.disabled=true;b.textContent="Luodaan treeniä…";
+  try{
+    const {data,error}=await sb.from("workouts").insert({profile_id:pid,name:"Treeni "+n,description:name,position:n}).select("id").single();
+    if(error)throw error;
+    cloud.workouts[profile+":"+n]=data.id;cloud.workoutTitles[profile][n]=name;cloud.exercises[profile+":"+n]={};
+    renderWorkoutCards();update();openW(n);
+    alert("Treeni luotu! Lisää seuraavaksi liikkeet liikepankista.");
+  }catch(e){alert("Treenin luonti epäonnistui: "+(e.message||e))}
+  finally{b.disabled=false;b.textContent="＋ Lisää treeni"}
+}
+document.getElementById("newWorkoutBtn").onclick=createWorkout;
+async function chooseProfile(p){profile=p;profiles.style.display="none";home.style.display="block";profileTitle.textContent=(testAccount?"🧪 TESTI · ":"🏋️ ")+(p==="jarkko"?"Jarkko":"Ina");document.querySelectorAll(".jw").forEach(x=>x.style.display=p==="jarkko"?"block":"none");document.querySelectorAll(".iw").forEach(x=>x.style.display=p==="ina"?"block":"none");try{await fetchCloudHistory(p)}catch(e){console.error(e)}renderWorkoutCards();update()}
 function toProfiles(){home.style.display="none";detail.style.display="none";profiles.style.display="block";scrollTo(0,0)}
 
 async function ensureCloudStructure(){
