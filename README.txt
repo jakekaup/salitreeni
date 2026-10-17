@@ -1,2 +1,1 @@
-Kaupinkujan Bodarit v3.18
-Liikehistoriaan kehitysgraafit: työpaino, volyymi, laskennallinen 1RM; aikavälit 1/3/6 kk ja kaikki. Supersarjan molemmat osat omilla käyrillään. Välitallennus säilyy.
+Kaupinkujan Bodarit v3.19: yhteinen liikepankki, luokittelut, haku, omat liikkeet ja lisäys treeniin. Omat pankkiliikkeet tallennetaan selaimen localStorageen käyttäjätunnuskohtaisesti; eivät synkronoidu laitteiden välillä. Varsinaiset treenitulokset Supabasessa. Testaa ensin testitunnuksella.
