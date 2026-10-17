@@ -1,1 +1,4 @@
-Kaupinkujan Bodarit v3.19: yhteinen liikepankki, luokittelut, haku, omat liikkeet ja lisäys treeniin. Omat pankkiliikkeet tallennetaan selaimen localStorageen käyttäjätunnuskohtaisesti; eivät synkronoidu laitteiden välillä. Varsinaiset treenitulokset Supabasessa. Testaa ensin testitunnuksella.
+Kaupinkujan Bodarit v3.20.1
+Vie kaikki 9 tiedostoa GitHub Pages -julkaisun juureen.
+Versio poistaa vanhat service worker -rekisteroinnit valimuistiongelmien valttamiseksi.
+Kirjautumista ei ole testattu oikeaa Supabase-palvelua vasten.

@@ -31,7 +31,7 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <input id="password" type="password" autocomplete="current-password" placeholder="Salasana">
 <button class="save" id="loginBtn">Kirjaudu</button>
 <div id="loginMsg" class="small">Yhdistetään Supabaseen…</div>
-<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.19.1</div>
+<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.20.1</div>
 </div></section>
 <section id="profiles" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><img src="icon-192.png" alt="" style="width:48px;height:48px;border-radius:22%"><h1 style="margin:0">Kaupinkujan Bodarit</h1></div><button class="back" id="logoutBtn">Kirjaudu ulos</button></div><h2>Kuka treenaa?</h2>
 <div class="grid">
@@ -46,7 +46,7 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <button class="workout iw" style="display:none" data-n="1"><span class="done" id="i1"></span><strong>Treeni 1</strong><span class="sub">🍑 Jalat 1</span></button>
 <button class="workout iw" style="display:none" data-n="2"><span class="done" id="i2"></span><strong>Treeni 2</strong><span class="sub">🟥 Push</span></button>
 <button class="workout iw" style="display:none" data-n="3"><span class="done" id="i3"></span><strong>Treeni 3</strong><span class="sub">🟦 Jalat 2 + Pull</span></button>
-</div><p class="small" style="text-align:center">☁️ Supabase yhdistetty · treenit tallennetaan myös pilveen.</p><button class="save" id="historyBtn" style="margin-top:18px">📊 Historia</button><button class="addExercise" id="bankHomeBtn">🏋️ Liikepankki</button></section>
+</div><p class="small" style="text-align:center">☁️ Supabase yhdistetty · treenit tallennetaan myös pilveen.</p><button class="save" id="historyBtn" style="margin-top:18px">📊 Historia</button><button class="addExercise" id="newWorkoutBtn">＋ Lisää treeni</button><button class="addExercise" id="bankHomeBtn">🏋️ Liikepankki</button></section>
 <section id="history" style="display:none"><button class="back" id="historyBack">‹ Treenit</button><h1 id="historyTitle">Historia</h1><div id="historyList"></div></section>
 <section id="historyDetail" style="display:none"><button class="back" id="historyDetailBack">‹ Historia</button><h1 id="historyDetailTitle"></h1><div id="historyDetailBody"></div></section>
 <section id="exerciseHistory" style="display:none"><button class="back" id="exerciseHistoryBack">‹ Historia</button><h1 id="exerciseHistoryTitle"></h1><div id="exerciseHistoryBody"></div></section>
@@ -64,7 +64,7 @@ email=$("email"),password=$("password"),loginBtn=$("loginBtn"),loginMsg=$("login
 logoutBtn=$("logoutBtn"),profileBack=$("profileBack"),profileTitle=$("profileTitle"),
 back=$("back"),title=$("title"),exercises=$("exercises"),notes=$("notes"),
 saveBtn=$("saveBtn"),bar=$("bar"),addExercise=$("addExercise"),history=$("history"),historyDetail=$("historyDetail"),exerciseHistory=$("exerciseHistory"),historyBtn=$("historyBtn"),historyBack=$("historyBack"),historyDetailBack=$("historyDetailBack"),exerciseHistoryBack=$("exerciseHistoryBack"),historyTitle=$("historyTitle"),historyList=$("historyList"),historyDetailTitle=$("historyDetailTitle"),historyDetailBody=$("historyDetailBody"),exerciseHistoryTitle=$("exerciseHistoryTitle"),exerciseHistoryBody=$("exerciseHistoryBody");
-let cloud={profiles:{},workouts:{},exercises:{},history:{jarkko:[],ina:[]}};
+let cloud={profiles:{},workouts:{},exercises:{},history:{jarkko:[],ina:[]},workoutTitles:{jarkko:{},ina:{}}};
 
 const programs={
 jarkko:{1:["Kyykky","Romanialainen maastaveto","Jalkaprässi","Loitontajat","Lähentäjät"],2:["Leuanveto","Penkkipunnerrus","Ylätalja","Pullover taljassa"],3:["Jalkaprässi / kevyt","Reiden koukistus","Reiden ojennus","Pohkeet"],4:["Vinopenkki","Pystypunnerrus tangolla","Soutu","Ylätalja"]},
@@ -282,7 +282,7 @@ async function ensureCloudStructure(){
       let w=ws.find(x=>x.position===n);
       if(!w){let r=await sb.from("workouts").insert({profile_id:pr.id,name:"Treeni "+n,description:desc,position:n}).select().single();if(r.error)throw r.error;w=r.data;ws.push(w)}
       else if(w.description!==desc){let u=await sb.from("workouts").update({description:desc}).eq("id",w.id);if(u.error)throw u.error;w.description=desc}
-      cloud.workouts[key+":"+n]=w.id;
+      cloud.workouts[key+":"+n]=w.id;cloud.workoutTitles[key][n]=w.description||w.name;
       let {data:es,error:ee}=await sb.from("exercises").select("*").eq("workout_id",w.id);if(ee)throw ee;
       cloud.exercises[key+":"+n]={};
       const all=programs[key][n];
@@ -291,6 +291,13 @@ async function ensureCloudStructure(){
         if(!e){let r=await sb.from("exercises").insert({workout_id:w.id,name:all[i],position:i+1}).select().single();if(r.error)throw r.error;e=r.data;es.push(e)}
         cloud.exercises[key+":"+n][all[i]]=e.id;
       }
+    }
+    for(const w of ws.filter(x=>x.position>max)){
+      cloud.workouts[key+":"+w.position]=w.id;
+      cloud.workoutTitles[key][w.position]=w.description||w.name;
+      const r=await sb.from("exercises").select("id,name").eq("workout_id",w.id);
+      if(r.error)throw r.error;
+      cloud.exercises[key+":"+w.position]=Object.fromEntries((r.data||[]).map(e=>[e.name,e.id]));
     }
   }
 }
@@ -365,7 +372,7 @@ function cloudLastEntry(n,x){
 
 async function doLogin(){
   loginMsg.textContent="Kirjaudutaan…";loginBtn.disabled=true;
-  const {error}=await sb.auth.signInWithPassword({email:email.value.trim(),password:password.value});
+  const {error}=await Promise.race([sb.auth.signInWithPassword({email:email.value.trim(),password:password.value}),new Promise((_,reject)=>setTimeout(()=>reject(new Error("Kirjautumisyhteys aikakatkaistiin (15 s).")),15000))]);
   if(error){loginMsg.textContent="Kirjautuminen epäonnistui: "+error.message;loginBtn.disabled=false;return}
   try{await ensureCloudStructure();loginMsg.textContent=testAccount?"Avataan testiympäristö…":"Tarkistetaan vanha historia…";if(!testAccount)await importLocalHistoryOnce();await fetchCloudHistory("jarkko");await fetchCloudHistory("ina");showProfiles()}catch(e){loginMsg.textContent="Yhteys/migraatio epäonnistui: "+e.message}
   loginBtn.disabled=false;
@@ -379,13 +386,13 @@ async function boot(){
   login.style.display="block";
   loginMsg.textContent="Yhdistetään Supabaseen…";
   if(!sb){fatal("Supabase-kirjasto ei latautunut. Tarkista verkkoyhteys ja päivitä sivu.");return}
-  const {data:{session}}=await sb.auth.getSession();
+  const {data:{session}}=await Promise.race([sb.auth.getSession(),new Promise((_,reject)=>setTimeout(()=>reject(new Error("Supabase ei vastannut 15 sekunnissa. Tarkista verkkoyhteys ja yritä uudelleen.")),15000))]);
   if(!session){login.style.display="block";loginMsg.textContent="";return}
   try{await ensureCloudStructure();loginMsg.textContent=testAccount?"Avataan testiympäristö…":"Tarkistetaan vanha historia…";if(!testAccount)await importLocalHistoryOnce();await fetchCloudHistory("jarkko");await fetchCloudHistory("ina");showProfiles()}catch(e){login.style.display="block";loginMsg.textContent="Supabase/migraatiovirhe: "+e.message}
 }
 
 historyBtn.onclick=showHistory;historyBack.onclick=()=>{history.style.display="none";home.style.display="block"};historyDetailBack.onclick=showHistory;exerciseHistoryBack.onclick=showHistory;
-loginBtn.onclick=doLogin;password.addEventListener("keydown",e=>{if(e.key==="Enter")doLogin()});logoutBtn.onclick=async()=>{await sb.auth.signOut();profiles.style.display="none";home.style.display="none";detail.style.display="none";login.style.display="block";loginMsg.textContent=""};
+loginBtn.onclick=()=>doLogin().catch(e=>{loginMsg.textContent="Kirjautumisvirhe: "+e.message;loginBtn.disabled=false});password.addEventListener("keydown",e=>{if(e.key==="Enter")loginBtn.click()});logoutBtn.onclick=async()=>{await sb.auth.signOut();profiles.style.display="none";home.style.display="none";detail.style.display="none";login.style.display="block";loginMsg.textContent=""};
 document.querySelectorAll("[data-profile]").forEach(b=>b.onclick=async()=>await chooseProfile(b.dataset.profile));profileBack.onclick=toProfiles;document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>openW(+b.dataset.n));back.onclick=goHome;saveBtn.onclick=saveW;detail.addEventListener("input",scheduleDraft);detail.addEventListener("change",scheduleDraft);
 addExercise.onclick=()=>openBank("workout");
 boot().catch(e=>fatal("Käynnistysvirhe: "+e.message));
@@ -395,7 +402,7 @@ if("serviceWorker"in navigator){
     try{
       const regs=await navigator.serviceWorker.getRegistrations();
       for(const r of regs) await r.unregister();
-      await navigator.serviceWorker.register("./sw.js?v=3190");
+      /* No service worker is bundled: unregister stale workers to prevent cached builds. */
     }catch(e){}
   });
 }
