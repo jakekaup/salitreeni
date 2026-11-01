@@ -31,7 +31,7 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <input id="password" type="password" autocomplete="current-password" placeholder="Salasana">
 <button class="save" id="loginBtn">Kirjaudu</button>
 <div id="loginMsg" class="small">Yhdistetään Supabaseen…</div>
-<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.20.2</div>
+<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.21.0</div>
 </div></section>
 <section id="profiles" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><img src="icon-192.png" alt="" style="width:48px;height:48px;border-radius:22%"><h1 style="margin:0">Kaupinkujan Bodarit</h1></div><button class="back" id="logoutBtn">Kirjaudu ulos</button></div><h2>Kuka treenaa?</h2>
 <div class="grid">
@@ -156,7 +156,18 @@ async function writeExercise(el){
  savedExerciseNames.add(v.name);persistDraft();return v.name
 }
 function addPartialButtons(){document.querySelectorAll("#exercises .exercise").forEach(el=>{if(el.querySelector(".partialSave"))return;let b=document.createElement("button");b.type="button";b.className="partialSave";b.textContent="☁️ Tallenna liike";b.style.cssText="display:block;width:100%;padding:12px;margin-top:12px;border-radius:12px;background:#3c4637;color:white;border:1px solid #7b946d;font-weight:700";b.onclick=async()=>{if(b.disabled)return;b.disabled=true;b.textContent="Tallennetaan liikettä…";persistDraft();try{await Promise.race([writeExercise(el),new Promise((_,reject)=>setTimeout(()=>reject(Error("Aikakatkaisu. Tarkista historia ennen uudelleenyritystä.")),25000))]);b.textContent="✓ Tallennettu pilveen";}catch(e){b.textContent="☁️ Yritä tallentaa uudelleen";alert("Liikkeen tallennus epäonnistui: "+(e.message||e))}finally{b.disabled=false}};el.appendChild(b)})}
-function openW(n){cur=n;superPick=null;home.style.display="none";detail.style.display="block";title.textContent="Treeni "+n;notes.value="";exercises.innerHTML="";names(n).forEach(x=>exercises.appendChild(card(x)));refreshSuper();addPartialButtons();activeSessionId=null;savedExerciseNames=new Set();try{let d=JSON.parse(localStorage.getItem(draftKey())||"null");if(d)restoreDraft(d)}catch(e){}scrollTo(0,0)}
+// Esitäytä vain painot viimeisimmästä saman ohjelman treenistä.
+function prefillPreviousWeights(){
+ document.querySelectorAll("#exercises .exercise").forEach(el=>{
+  const previous=last(cur,el.dataset.name);
+  if(!Array.isArray(previous)||!previous.length)return;
+  const rows=()=>[...el.querySelectorAll(".row")];
+  const add=el.querySelector(".addRound")||el.querySelector(".addSet");
+  while(rows().length<previous.length&&add){const before=rows().length;add.click();if(rows().length===before)break}
+  rows().forEach((r,i)=>{const kg=previous[i]?.kg;if(kg!==undefined&&kg!==null&&String(kg)!=="")r.querySelector(".kg").value=String(kg)});
+ });
+}
+function openW(n){cur=n;superPick=null;home.style.display="none";detail.style.display="block";title.textContent="Treeni "+n;notes.value="";exercises.innerHTML="";names(n).forEach(x=>exercises.appendChild(card(x)));refreshSuper();addPartialButtons();activeSessionId=null;savedExerciseNames=new Set();prefillPreviousWeights();try{let d=JSON.parse(localStorage.getItem(draftKey())||"null");if(d)restoreDraft(d)}catch(e){}scrollTo(0,0)}
 function goHome(){detail.style.display="none";home.style.display="block";update();scrollTo(0,0)}
 async function saveW(){
  if(saveBtn.disabled)return;
