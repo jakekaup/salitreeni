@@ -31,7 +31,7 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <input id="password" type="password" autocomplete="current-password" placeholder="Salasana">
 <button class="save" id="loginBtn">Kirjaudu</button>
 <div id="loginMsg" class="small">Yhdistetään Supabaseen…</div>
-<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.24.0</div>
+<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.24.1</div>
 </div></section>
 <section id="profiles" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><img src="icon-192.png" alt="" style="width:48px;height:48px;border-radius:22%"><h1 style="margin:0">Kaupinkujan Bodarit</h1></div><button class="back" id="logoutBtn">Kirjaudu ulos</button></div><h2>Kuka treenaa?</h2>
 <div class="grid">
@@ -110,8 +110,8 @@ const legacyIna={
 let profile="jarkko";let cur=0;let superPick=null;let testAccount=false;let authUserId="";
 function superPairs(){return (load().supersets||{})[cur]||[]}
 function superName(pair){return "🔁 "+pair[0]+" + "+pair[1]}
-function isSuper(name){return name.startsWith("🔁 ")&&name.includes(" + ")}
-function superParts(name){return name.slice(3).split(" + ")}
+function isSuper(name){return typeof name==="string"&&name.startsWith("🔁 ")&&name.includes(" + ")}
+function superParts(name){return isSuper(name)?name.slice(3).split(" + "):[]}
 function saveSuperPairs(pairs){let d=load();if(!d.supersets)d.supersets={};d.supersets[cur]=pairs;store(d)}
 // Preserve unfinished entries when changing the superseries layout.
 function snapshotDraft(){let draft={notes:notes.value,cards:{}};document.querySelectorAll('#exercises .exercise').forEach(el=>{draft.cards[el.dataset.name]={sets:[...el.querySelectorAll('.row')].map(r=>({kg:r.querySelector('.kg')?.value||'',reps:r.querySelector('.reps')?.value||''})),note:el.querySelector('.exerciseNote')?.value||''}});return draft}
