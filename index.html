@@ -31,7 +31,7 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <input id="password" type="password" autocomplete="current-password" placeholder="Salasana">
 <button class="save" id="loginBtn">Kirjaudu</button>
 <div id="loginMsg" class="small">Yhdistetään Supabaseen…</div>
-<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.24.1</div>
+<div id="buildInfo" class="small" style="margin-top:8px">Kaupinkujan Bodarit v3.26.0</div>
 </div></section>
 <section id="profiles" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><img src="icon-192.png" alt="" style="width:48px;height:48px;border-radius:22%"><h1 style="margin:0">Kaupinkujan Bodarit</h1></div><button class="back" id="logoutBtn">Kirjaudu ulos</button></div><h2>Kuka treenaa?</h2>
 <div class="grid">
@@ -46,9 +46,9 @@ textarea{width:100%;min-height:105px;border-radius:15px;border:1px solid var(--l
 <button class="workout iw" style="display:none" data-n="1"><span class="done" id="i1"></span><strong>Treeni 1</strong><span class="sub">👑 Pakarat & yläselkä</span></button>
 <button class="workout iw" style="display:none" data-n="2"><span class="done" id="i2"></span><strong>Treeni 2</strong><span class="sub">👑 Ylävartalo & olkapäät</span></button>
 <button class="workout iw" style="display:none" data-n="3"><span class="done" id="i3"></span><strong>Treeni 3</strong><span class="sub">👑 Selkä & jalat</span></button>
-</div><p class="small" style="text-align:center">☁️ Supabase yhdistetty · treenit tallennetaan myös pilveen.</p><button class="save" id="historyBtn" style="margin-top:18px">📊 Historia</button><button class="addExercise" id="newWorkoutBtn">＋ Lisää treeni</button><button class="addExercise" id="manageWorkoutsBtn">⚙️ Hallitse ohjelmaa</button><div id="manageWorkoutsPanel" style="display:none"></div><button class="addExercise" id="bankHomeBtn">🏋️ Liikepankki</button></section>
+</div><p class="small" style="text-align:center">☁️ Supabase yhdistetty · treenit tallennetaan myös pilveen.</p><button class="save" id="historyBtn" style="margin-top:18px">📊 Historia</button><button class="addExercise" id="sharedBtn">🤝 Yhteiset treenit ja tsempit</button><button class="addExercise" id="newWorkoutBtn">＋ Lisää treeni</button><button class="addExercise" id="manageWorkoutsBtn">⚙️ Hallitse ohjelmaa</button><div id="manageWorkoutsPanel" style="display:none"></div><button class="addExercise" id="bankHomeBtn">🏋️ Liikepankki</button></section>
 <section id="history" style="display:none"><button class="back" id="historyBack">‹ Treenit</button><h1 id="historyTitle">Historia</h1><div id="historyList"></div></section>
-<section id="historyDetail" style="display:none"><button class="back" id="historyDetailBack">‹ Historia</button><h1 id="historyDetailTitle"></h1><div id="historyDetailBody"></div></section>
+<section id="shared" style="display:none"><button class="back" id="sharedBack">‹ Treenit</button><h1>🤝 Yhteiset treenit</h1><div class="card"><strong>Jaa omat treenisi</strong><p class="small">Lähetä kutsu toisen Supabase-kirjautumistunnuksen sähköpostiin. Vain hyväksytty kutsu antaa katseluoikeuden.</p><input id="shareEmail" type="email" placeholder="Toisen käyttäjän sähköposti"><button id="shareInvite" class="save">Lähetä kutsu</button><div id="shareMessage" class="small"></div></div><div id="shareList"></div><div id="sharedWorkouts"></div></section><section id="historyDetail" style="display:none"><button class="back" id="historyDetailBack">‹ Historia</button><h1 id="historyDetailTitle"></h1><div id="historyDetailBody"></div></section>
 <section id="exerciseHistory" style="display:none"><button class="back" id="exerciseHistoryBack">‹ Historia</button><h1 id="exerciseHistoryTitle"></h1><div id="exerciseHistoryBody"></div></section>
 <section id="detail"><button class="back" id="back">‹ Viikon treenit</button><h1 id="title"></h1><div class="superbar"><strong>🔁 Supersarjat omana liikkeenä</strong><small>Valitse kaksi liikettä. Kirjaa kierrokset yhdessä, seuraa historiassa yhtenä liikkeenä.</small><div id="superStatus"></div><button type="button" id="superClear">Pura supersarjat takaisin liikkeiksi</button></div><div id="exercises"></div>
 <button class="addExercise" id="addExercise">＋ Lisää liike pankista</button>
@@ -202,6 +202,37 @@ function fd(v){return new Date(v).toLocaleDateString("fi-FI")}
 function wname(n){let a=profile==="jarkko"?["","Alakroppa – raskas","Yläkroppa – raskas","Alakroppa – kevyt","Yläkroppa – kevyt"]:["","Pakarat & yläselkä","Ylävartalo & olkapäät","Selkä & jalat"];return (profile==="ina"&&n===4)?"Pull (vanha)":(a[n]||("Treeni "+n))}
 function historyMonth(date){return new Intl.DateTimeFormat("fi-FI",{month:"long",year:"numeric"}).format(new Date(date))}
 function historyGroupByMonth(items,render){let groups=new Map();items.forEach((item,i)=>{let month=historyMonth(item.date);if(!groups.has(month))groups.set(month,[]);groups.get(month).push({item,i})});return [...groups].map(([month,entries],j)=>`<details class="historyMonth" ${j===0?"open":""}><summary style="padding:12px;font-weight:600;text-transform:capitalize">${esc(month)} (${entries.length})</summary>${entries.map(({item,i})=>render(item,i)).join("")}</details>`).join("")}
+
+async function openShared(){
+ home.style.display="none";history.style.display="none";historyDetail.style.display="none";exerciseHistory.style.display="none";detail.style.display="none";
+ shared.style.display="block";sharedWorkouts.innerHTML="";shareMessage.textContent="";await refreshShares();scrollTo(0,0)
+}
+async function refreshShares(){
+ shareList.innerHTML='<div class="small">Haetaan kutsuja…</div>';
+ const {data,error}=await sb.rpc("bodarit_shares");
+ if(error){shareList.innerHTML='<div class="card">Jakaminen ei ole vielä käytössä. Suorita ensin Supabase SQL -migraatio. '+esc(error.message)+'</div>';return}
+ const shares=Array.isArray(data)?data:[];
+ shareList.innerHTML=shares.length?shares.map(x=>'<div class="card"><strong>'+esc(x.email)+'</strong><div class="small">'+(x.direction==="out"?"Sinä jaat omia treenejäsi":"Sinulle jaetut treenit")+' · '+(x.status==="accepted"?"Hyväksytty":"Odottaa hyväksyntää")+'</div><div class="row" style="display:flex;gap:8px;flex-wrap:wrap">'+(x.direction==="in"&&x.status==="pending"?'<button class="acceptShare" data-id="'+esc(x.id)+'">Hyväksy</button>':'')+(x.direction==="in"&&x.status==="accepted"?'<button class="viewShare" data-owner="'+esc(x.owner_id)+'" data-email="'+esc(x.email)+'">Näytä treenit</button>':'')+'<button class="removeShare" data-id="'+esc(x.id)+'">Poista</button></div></div>').join(""):'<div class="card">Ei vielä kutsuja. Pyydä toista lähettämään kutsu sähköpostiisi.</div>';
+ shareList.querySelectorAll(".acceptShare").forEach(b=>b.onclick=()=>respondShare(b.dataset.id,true));
+ shareList.querySelectorAll(".removeShare").forEach(b=>b.onclick=()=>respondShare(b.dataset.id,false));
+ shareList.querySelectorAll(".viewShare").forEach(b=>b.onclick=()=>viewSharedWorkouts(b.dataset.owner,b.dataset.email));
+}
+async function respondShare(id,accept){
+ const {error}=await sb.rpc("bodarit_respond",{p_share:id,p_accept:accept});
+ if(error){shareMessage.textContent=error.message;return}await refreshShares()
+}
+async function viewSharedWorkouts(owner,email){
+ sharedWorkouts.innerHTML='<div class="card">Haetaan treenejä…</div>';
+ const {data,error}=await sb.rpc("bodarit_shared_workouts",{p_owner:owner});
+ if(error){sharedWorkouts.innerHTML='<div class="card">'+esc(error.message)+'</div>';return}
+ const sessions=Array.isArray(data)?data:[];
+ sharedWorkouts.innerHTML='<h2>'+esc(email)+' · Treenihistoria</h2>'+(sessions.length?sessions.map((h,i)=>{
+  const reacts=h.reactions||[],mine=reacts.find(r=>r.sender_id===authUserId);
+  return '<details class="exercise"><summary><strong>'+esc(fd(h.date))+' · '+esc(h.profile)+' · '+esc(h.description||h.workout)+'</strong><div class="small">'+(reacts.filter(r=>r.reaction==="like").length)+' 👍 · '+(reacts.filter(r=>r.reaction==="cheer").length)+' 💪</div></summary>'+(h.notes?'<p class="prevnote">'+esc(h.notes)+'</p>':'')+(h.exercises||[]).map(e=>'<div style="padding:10px 0"><strong>'+esc(e.name)+'</strong>'+(e.sets||[]).map((st,j)=>'<div class="small">Sarja '+(j+1)+': '+esc(weightLabel(weightFromDb(st.kg)||"–"))+' × '+esc(st.reps??"–")+'</div>').join("")+(e.notes?'<div class="small">'+esc(e.notes)+'</div>':'')+'</div>').join("")+'<div class="row" style="display:flex;gap:8px"><button class="sharedReact" data-id="'+esc(h.id)+'" data-kind="like">'+(mine?.reaction==="like"?"✓ ":"")+'👍 Tykkää</button><button class="sharedReact" data-id="'+esc(h.id)+'" data-kind="cheer">'+(mine?.reaction==="cheer"?"✓ ":"")+'💪 Tsemppi</button></div></details>'
+ }).join(""):'<div class="card">Ei vielä jaettuja treenejä.</div>');
+ sharedWorkouts.querySelectorAll(".sharedReact").forEach(b=>b.onclick=async()=>{b.disabled=true;const {error}=await sb.rpc("bodarit_react",{p_session:b.dataset.id,p_reaction:b.dataset.kind});if(error){alert(error.message);b.disabled=false}else await viewSharedWorkouts(owner,email)});
+}
+
 function showHistory(){
  home.style.display="none";history.style.display="block";historyDetail.style.display="none";exerciseHistory.style.display="none";historyTitle.textContent=(profile==="jarkko"?"Jarkko":"Ina")+" · Historia";
  let all=cloud.history[profile]||[],rev=[...all].reverse(),exnames=[...new Set(rev.flatMap(h=>Object.keys(h.exercises||{})).concat(profile==="ina"?Object.keys(legacyIna):[]))].sort();
@@ -330,7 +361,7 @@ async function createWorkout(){
   finally{b.disabled=false;b.textContent="＋ Lisää treeni"}
 }
 document.getElementById("newWorkoutBtn").onclick=createWorkout;
-async function chooseProfile(p){profile=p;profiles.style.display="none";home.style.display="block";profileTitle.textContent=(testAccount?"🧪 TESTI · ":"🏋️ ")+(p==="jarkko"?"Jarkko":"Ina");document.querySelectorAll(".jw").forEach(x=>x.style.display=p==="jarkko"?"block":"none");document.querySelectorAll(".iw").forEach(x=>x.style.display=p==="ina"?"block":"none");try{await fetchCloudHistory(p)}catch(e){console.error(e)}renderWorkoutCards();update()}
+async function chooseProfile(p){shared.style.display="none";profile=p;profiles.style.display="none";home.style.display="block";profileTitle.textContent=(testAccount?"🧪 TESTI · ":"🏋️ ")+(p==="jarkko"?"Jarkko":"Ina");document.querySelectorAll(".jw").forEach(x=>x.style.display=p==="jarkko"?"block":"none");document.querySelectorAll(".iw").forEach(x=>x.style.display=p==="ina"?"block":"none");try{await fetchCloudHistory(p)}catch(e){console.error(e)}renderWorkoutCards();update()}
 function toProfiles(){home.style.display="none";detail.style.display="none";profiles.style.display="block";scrollTo(0,0)}
 
 async function ensureCloudStructure(){
@@ -444,7 +475,7 @@ async function doLogin(){
   try{await ensureCloudStructure();loginMsg.textContent=testAccount?"Avataan testiympäristö…":"Tarkistetaan vanha historia…";if(!testAccount)await importLocalHistoryOnce();await fetchCloudHistory("jarkko");await fetchCloudHistory("ina");showProfiles()}catch(e){loginMsg.textContent="Yhteys/migraatio epäonnistui: "+e.message}
   loginBtn.disabled=false;
 }
-function showProfiles(){document.querySelector("#profiles h2").textContent=testAccount?"TESTIKÄYTTÄJÄ – Kuka treenaa?":"Kuka treenaa?";login.style.display="none";home.style.display="none";detail.style.display="none";profiles.style.display="block";password.value="";scrollTo(0,0)}
+function showProfiles(){shared.style.display="none";document.querySelector("#profiles h2").textContent=testAccount?"TESTIKÄYTTÄJÄ – Kuka treenaa?":"Kuka treenaa?";login.style.display="none";home.style.display="none";detail.style.display="none";profiles.style.display="block";password.value="";scrollTo(0,0)}
 function fatal(msg){
   login.style.display="block";profiles.style.display="none";home.style.display="none";detail.style.display="none";
   loginMsg.textContent=msg;
@@ -458,7 +489,7 @@ async function boot(){
   try{await ensureCloudStructure();loginMsg.textContent=testAccount?"Avataan testiympäristö…":"Tarkistetaan vanha historia…";if(!testAccount)await importLocalHistoryOnce();await fetchCloudHistory("jarkko");await fetchCloudHistory("ina");showProfiles()}catch(e){login.style.display="block";loginMsg.textContent="Supabase/migraatiovirhe: "+e.message}
 }
 
-historyBtn.onclick=showHistory;historyBack.onclick=()=>{history.style.display="none";home.style.display="block"};historyDetailBack.onclick=showHistory;exerciseHistoryBack.onclick=showHistory;
+sharedBtn.onclick=()=>openShared().catch(e=>alert(e.message));sharedBack.onclick=()=>{shared.style.display="none";home.style.display="block"};shareInvite.onclick=async()=>{shareInvite.disabled=true;const {data,error}=await sb.rpc("bodarit_invite",{p_email:shareEmail.value.trim()});shareMessage.textContent=error?error.message:data;shareInvite.disabled=false;if(!error)await refreshShares()};historyBtn.onclick=showHistory;historyBack.onclick=()=>{history.style.display="none";home.style.display="block"};historyDetailBack.onclick=showHistory;exerciseHistoryBack.onclick=showHistory;
 loginBtn.onclick=()=>doLogin().catch(e=>{loginMsg.textContent="Kirjautumisvirhe: "+e.message;loginBtn.disabled=false});password.addEventListener("keydown",e=>{if(e.key==="Enter")loginBtn.click()});logoutBtn.onclick=async()=>{await sb.auth.signOut();profiles.style.display="none";home.style.display="none";detail.style.display="none";login.style.display="block";loginMsg.textContent=""};
 document.querySelectorAll("[data-profile]").forEach(b=>b.onclick=async()=>await chooseProfile(b.dataset.profile));profileBack.onclick=toProfiles;document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>openW(+b.dataset.n));back.onclick=goHome;saveBtn.onclick=saveW;detail.addEventListener("input",scheduleDraft);detail.addEventListener("change",scheduleDraft);
 addExercise.onclick=()=>openBank("workout");
